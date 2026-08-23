@@ -47,6 +47,23 @@ public class WindowFrame {
         this.y = y;
     }
 
+    public Category getCategory() {
+        return category;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+
     public static int heightFor(Category category) {
         return HEADER_HEIGHT + bodyHeight(ModuleManager.getByCategory(category).size());
     }
@@ -55,25 +72,53 @@ public class WindowFrame {
         return moduleCount > 0 ? moduleCount * ENTRY_HEIGHT : EMPTY_BODY_HEIGHT;
     }
 
-    public void render(GuiGraphicsExtractor graphics, Font font, int mouseX, int mouseY) {
+    private static int fade(int color, float alpha) {
+        if (alpha >= 1f) return color;
+        int a = (color >>> 24) & 0xFF;
+        a = (int) (a * alpha);
+        return (color & 0x00FFFFFF) | (a << 24);
+    }
+
+    // ease out with a tiny overshoot, feels like the window pops into place
+    private static float easeOutBack(float t) {
+        float c1 = 1.2f;
+        float c3 = c1 + 1f;
+        float u = t - 1f;
+        return 1f + c3 * u * u * u + c1 * u * u;
+    }
+
+    public void render(GuiGraphicsExtractor graphics, Font font, int mouseX, int mouseY, float anim) {
         List<Module> modules = ModuleManager.getByCategory(category);
         int bodyHeight = bodyHeight(modules.size());
         int windowHeight = HEADER_HEIGHT + bodyHeight;
 
-        graphics.fill(x + SHADOW_OFFSET, y + SHADOW_OFFSET, x + WIDTH + SHADOW_OFFSET,
-            y + SHADOW_OFFSET + windowHeight, COLOR_SHADOW);
+        float eased = easeOutBack(anim);
+        float scale = 0.94f + 0.06f * eased;
+        float alpha = Math.min(1f, anim * 2f);
+        float rise = (1f - eased) * 6f;
 
-        graphics.fill(x, y, x + WIDTH, y + HEADER_HEIGHT, COLOR_HEADER);
-        graphics.fill(x, y + HEADER_HEIGHT - 2, x + WIDTH, y + HEADER_HEIGHT, ACCENT);
-        graphics.fill(x, y + HEADER_HEIGHT, x + WIDTH, y + HEADER_HEIGHT + bodyHeight, COLOR_BODY);
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(x + WIDTH / 2f, y + windowHeight / 2f);
+        graphics.pose().scale(scale, scale);
+        graphics.pose().translate(-(x + WIDTH / 2f), -(y + windowHeight / 2f) + rise);
+
+        graphics.fill(x + SHADOW_OFFSET, y + SHADOW_OFFSET, x + WIDTH + SHADOW_OFFSET,
+            y + SHADOW_OFFSET + windowHeight, fade(COLOR_SHADOW, alpha));
+
+        graphics.fill(x, y, x + WIDTH, y + HEADER_HEIGHT, fade(COLOR_HEADER, alpha));
+        graphics.fill(x, y + HEADER_HEIGHT - 2, x + WIDTH, y + HEADER_HEIGHT, fade(ACCENT, alpha));
+        graphics.fill(x, y + HEADER_HEIGHT, x + WIDTH, y + HEADER_HEIGHT + bodyHeight,
+            fade(COLOR_BODY, alpha));
 
         graphics.centeredText(font, category.getDisplayName(), x + WIDTH / 2,
-            y + (HEADER_HEIGHT - font.lineHeight) / 2, COLOR_TEXT_ON);
+            y + (HEADER_HEIGHT - font.lineHeight) / 2, fade(COLOR_TEXT_ON, alpha));
 
         hovered = null;
         if (modules.isEmpty()) {
             graphics.centeredText(font, "No modules", x + WIDTH / 2,
-                y + HEADER_HEIGHT + (EMPTY_BODY_HEIGHT - font.lineHeight) / 2, COLOR_TEXT_MUTED);
+                y + HEADER_HEIGHT + (EMPTY_BODY_HEIGHT - font.lineHeight) / 2,
+                fade(COLOR_TEXT_MUTED, alpha));
+            graphics.pose().popMatrix();
             return;
         }
 
@@ -82,23 +127,25 @@ public class WindowFrame {
             boolean hovering = isHovering(mouseX, mouseY, entryY);
             if (hovering) {
                 hovered = module;
-                graphics.fill(x, entryY, x + WIDTH, entryY + ENTRY_HEIGHT, COLOR_HOVER);
-                graphics.fill(x, entryY, x + 2, entryY + ENTRY_HEIGHT, ACCENT);
+                graphics.fill(x, entryY, x + WIDTH, entryY + ENTRY_HEIGHT, fade(COLOR_HOVER, alpha));
+                graphics.fill(x, entryY, x + 2, entryY + ENTRY_HEIGHT, fade(ACCENT, alpha));
             }
-            graphics.fill(x + 4, entryY, x + WIDTH - 4, entryY + 1, COLOR_SEPARATOR);
+            graphics.fill(x + 4, entryY, x + WIDTH - 4, entryY + 1, fade(COLOR_SEPARATOR, alpha));
 
             int color = module.isEnabled() ? COLOR_TEXT_ON : COLOR_TEXT_OFF;
             graphics.text(font, module.getName(), x + 6,
-                entryY + (ENTRY_HEIGHT - font.lineHeight) / 2, color, true);
+                entryY + (ENTRY_HEIGHT - font.lineHeight) / 2, fade(color, alpha), true);
 
             int indicatorSize = 5;
             int indicatorX = x + WIDTH - indicatorSize - 6;
             int indicatorY = entryY + (ENTRY_HEIGHT - indicatorSize) / 2;
             graphics.fill(indicatorX, indicatorY, indicatorX + indicatorSize,
                 indicatorY + indicatorSize,
-                module.isEnabled() ? ACCENT : COLOR_INDICATOR_OFF);
+                fade(module.isEnabled() ? ACCENT : COLOR_INDICATOR_OFF, alpha));
             entryY += ENTRY_HEIGHT;
         }
+
+        graphics.pose().popMatrix();
     }
 
     public boolean hasHoveredModule() {

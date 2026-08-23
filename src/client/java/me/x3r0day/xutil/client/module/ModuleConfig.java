@@ -1,5 +1,6 @@
 package me.x3r0day.xutil.client.module;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -10,12 +11,16 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class ModuleConfig {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Path FILE = FabricLoader.getInstance().getConfigDir()
         .resolve("xutil-modules.json");
+    private static final Path WINDOW_FILE = FabricLoader.getInstance().getConfigDir()
+        .resolve("xutil-windows.json");
 
     private ModuleConfig() {
     }
@@ -48,6 +53,41 @@ public final class ModuleConfig {
         try {
             Files.createDirectories(FILE.getParent());
             Files.writeString(FILE, root.toString(), StandardCharsets.UTF_8);
+        } catch (IOException ignored) {
+        }
+    }
+
+    public static Map<String, int[]> loadWindowPositions() {
+        Map<String, int[]> positions = new HashMap<>();
+        if (!Files.exists(WINDOW_FILE)) {
+            return positions;
+        }
+        try {
+            JsonObject root = GsonHelper.parse(Files.readString(WINDOW_FILE, StandardCharsets.UTF_8));
+            for (String categoryName : root.keySet()) {
+                JsonArray pos = GsonHelper.getAsJsonArray(root, categoryName);
+                if (pos.size() == 2) {
+                    positions.put(categoryName,
+                        new int[]{pos.get(0).getAsInt(), pos.get(1).getAsInt()});
+                }
+            }
+        } catch (RuntimeException | IOException exception) {
+            LOGGER.error("Failed to load window positions", exception);
+        }
+        return positions;
+    }
+
+    public static void saveWindowPositions(Map<String, int[]> positions) {
+        JsonObject root = new JsonObject();
+        for (Map.Entry<String, int[]> entry : positions.entrySet()) {
+            JsonArray pos = new JsonArray();
+            pos.add(entry.getValue()[0]);
+            pos.add(entry.getValue()[1]);
+            root.add(entry.getKey(), pos);
+        }
+        try {
+            Files.createDirectories(WINDOW_FILE.getParent());
+            Files.writeString(WINDOW_FILE, root.toString(), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
         }
     }
