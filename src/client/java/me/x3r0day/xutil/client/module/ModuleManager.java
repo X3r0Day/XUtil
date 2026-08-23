@@ -3,6 +3,7 @@ package me.x3r0day.xutil.client.module;
 import com.mojang.logging.LogUtils;
 import me.x3r0day.xutil.client.module.impl.render.BreakIndicator;
 import me.x3r0day.xutil.client.module.impl.render.FullBright;
+import me.x3r0day.xutil.client.module.impl.render.TargetHighlight;
 import me.x3r0day.xutil.client.module.impl.render.Zoom;
 import me.x3r0day.xutil.client.module.impl.world.AutoTool;
 import me.x3r0day.xutil.client.module.impl.world.WorldInfo;
@@ -32,6 +33,7 @@ public final class ModuleManager {
         register(new AutoTool());
         register(new FullBright());
         register(new BreakIndicator());
+        register(new TargetHighlight());
         register(new Zoom());
     }
 
