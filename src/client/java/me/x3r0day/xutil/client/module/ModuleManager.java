@@ -3,8 +3,10 @@ package me.x3r0day.xutil.client.module;
 import com.mojang.logging.LogUtils;
 import me.x3r0day.xutil.client.module.impl.render.BreakIndicator;
 import me.x3r0day.xutil.client.module.impl.render.FullBright;
+import me.x3r0day.xutil.client.module.impl.render.Zoom;
 import me.x3r0day.xutil.client.module.impl.world.AutoTool;
 import me.x3r0day.xutil.client.module.impl.world.WorldInfo;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 
@@ -30,6 +32,7 @@ public final class ModuleManager {
         register(new AutoTool());
         register(new FullBright());
         register(new BreakIndicator());
+        register(new Zoom());
     }
 
     public static void register(Module module) {
@@ -72,6 +75,12 @@ public final class ModuleManager {
 
     public static void tick(Minecraft mc) {
         for (Module module : MODULES) {
+            if (module.usesDefaultKeybindToggle()) {
+                KeyMapping keybind = module.getKeybind();
+                while (keybind != null && keybind.consumeClick()) {
+                    module.toggle();
+                }
+            }
             if (module.isEnabled()) {
                 module.onTick(mc);
             }

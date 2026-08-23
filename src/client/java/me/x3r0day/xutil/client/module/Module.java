@@ -1,5 +1,9 @@
 package me.x3r0day.xutil.client.module;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import me.x3r0day.xutil.client.XutilClient;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
@@ -8,12 +12,26 @@ public abstract class Module {
     private final String name;
     private final String description;
     private final Category category;
+    private final KeyMapping keybind;
     private boolean enabled;
 
     protected Module(String name, String description, Category category) {
+        this(name, description, category, InputConstants.UNKNOWN.getValue());
+    }
+
+    protected Module(String name, String description, Category category, int defaultKey) {
+        this(name, description, category, defaultKey, true);
+    }
+
+    protected Module(String name, String description, Category category, int defaultKey,
+            boolean registerKeybind) {
         this.name = name;
         this.description = description;
         this.category = category;
+        this.keybind = registerKeybind
+            ? KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                name, InputConstants.Type.KEYSYM, defaultKey, XutilClient.CATEGORY))
+            : null;
     }
 
     public String getName() {
@@ -26,6 +44,14 @@ public abstract class Module {
 
     public Category getCategory() {
         return category;
+    }
+
+    public KeyMapping getKeybind() {
+        return keybind;
+    }
+
+    public boolean usesDefaultKeybindToggle() {
+        return true;
     }
 
     public boolean isEnabled() {

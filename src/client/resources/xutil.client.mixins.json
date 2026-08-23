@@ -4,10 +4,13 @@
   "package": "me.x3r0day.xutil.mixin.client",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "CameraMixin",
     "GameRendererMixin",
     "LightmapAccessor",
     "LightmapMixin",
     "MinecraftUserAccessor",
+    "MouseHandlerAccessor",
+    "MouseHandlerMixin",
     "MultiPlayerGameModeAccessor",
     "ShaderManagerMixin",
     "TitleScreenMixin"

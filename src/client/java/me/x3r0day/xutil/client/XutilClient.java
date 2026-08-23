@@ -19,16 +19,17 @@ import org.lwjgl.glfw.GLFW;
 public class XutilClient implements ClientModInitializer {
 
     public static final String MOD_ID = "xutil";
+    public static KeyMapping.Category CATEGORY;
 
     private static KeyMapping openClickGui;
 
     @Override
     public void onInitializeClient() {
-        KeyMapping.Category category = KeyMapping.Category.register(
+        CATEGORY = KeyMapping.Category.register(
             Identifier.fromNamespaceAndPath(MOD_ID, "main"));
         openClickGui = KeyMappingHelper.registerKeyMapping(new KeyMapping(
             "key.xutil.open_click_gui", InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_DELETE, category));
+            GLFW.GLFW_KEY_DELETE, CATEGORY));
 
         ModuleManager.init();
         AddonLoader.load();
@@ -40,7 +41,6 @@ public class XutilClient implements ClientModInitializer {
             Identifier.fromNamespaceAndPath(MOD_ID, "worldinfo"),
             (graphics, deltaTracker) -> WorldInfo.render(graphics, Minecraft.getInstance())
         );
-
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ModuleManager.tick(client);
 
