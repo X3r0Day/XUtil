@@ -2,7 +2,8 @@ package me.x3r0day.xutil.client.module.impl.world;
 
 import me.x3r0day.xutil.client.module.Category;
 import me.x3r0day.xutil.client.module.Module;
-import me.x3r0day.xutil.client.ui.WorldInfoScreen;
+import me.x3r0day.xutil.client.ui.OptionListScreen;
+import me.x3r0day.xutil.client.ui.OptionToggle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
@@ -12,7 +13,6 @@ import net.minecraft.world.entity.Entity;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.function.BooleanSupplier;
 
 public class WorldInfo extends Module {
 
@@ -32,19 +32,16 @@ public class WorldInfo extends Module {
     private static volatile boolean showFps;
     private static volatile boolean showEntities;
 
-    public record InfoToggle(String label, BooleanSupplier isOn, Runnable toggle) {
-    }
-
-    public static final List<InfoToggle> TOGGLES = List.of(
-        new InfoToggle("Biome", () -> showBiome, () -> showBiome = !showBiome),
-        new InfoToggle("Coordinates", () -> showCoords, () -> showCoords = !showCoords),
-        new InfoToggle("Dimension", () -> showDimension, () -> showDimension = !showDimension),
-        new InfoToggle("Game time", () -> showTime, () -> showTime = !showTime),
-        new InfoToggle("Day", () -> showDay, () -> showDay = !showDay),
-        new InfoToggle("Facing", () -> showFacing, () -> showFacing = !showFacing),
-        new InfoToggle("Light level", () -> showLight, () -> showLight = !showLight),
-        new InfoToggle("FPS", () -> showFps, () -> showFps = !showFps),
-        new InfoToggle("Nearby entities", () -> showEntities, () -> showEntities = !showEntities)
+    public static final List<OptionToggle> TOGGLES = List.of(
+        new OptionToggle("Biome", () -> showBiome, () -> showBiome = !showBiome),
+        new OptionToggle("Coordinates", () -> showCoords, () -> showCoords = !showCoords),
+        new OptionToggle("Dimension", () -> showDimension, () -> showDimension = !showDimension),
+        new OptionToggle("Game time", () -> showTime, () -> showTime = !showTime),
+        new OptionToggle("Day", () -> showDay, () -> showDay = !showDay),
+        new OptionToggle("Facing", () -> showFacing, () -> showFacing = !showFacing),
+        new OptionToggle("Light level", () -> showLight, () -> showLight = !showLight),
+        new OptionToggle("FPS", () -> showFps, () -> showFps = !showFps),
+        new OptionToggle("Nearby entities", () -> showEntities, () -> showEntities = !showEntities)
     );
 
     public WorldInfo() {
@@ -120,7 +117,8 @@ public class WorldInfo extends Module {
         Minecraft mc = Minecraft.getInstance();
         Screen parent = mc.gui.screen();
         if (parent != null) {
-            mc.gui.setScreen(new WorldInfoScreen(parent));
+            mc.gui.setScreen(new OptionListScreen("World Info",
+                "Click a row to toggle what the overlay shows", TOGGLES, parent));
         }
     }
 
