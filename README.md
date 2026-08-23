@@ -34,8 +34,8 @@ src/client/       client entrypoint, module system, ClickGUI, HUD, account switc
 ## Addons
 
 XUtil supports addon jars dropped into `mods/` (like Meteor Client addons). Addons register
-their own modules and ClickGUI categories via the `xutil:addons` entrypoint. See
-[ADDON_API.md](ADDON_API.md).
+their own modules and ClickGUI categories via the `xutil:addons` entrypoint. Addon devs can
+pull XUtil from JitPack as a dependency. See [ADDON_API.md](ADDON_API.md).
 
 ## License
 

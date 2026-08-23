@@ -70,19 +70,28 @@ working.
 
 ## Walkthrough
 
-1. Build XUtil: `./gradlew build` (from the repo root).
-2. Create your own Fabric mod project (any loom template works) and depend on the built jar:
+1. Create your own Fabric mod project (any loom template works) and depend on XUtil from JitPack:
 
    ```gradle
-   // MC 26.2 doesn't remap, so plain implementation is fine
-   implementation files("path/to/XUtil-1.0.jar")
+   repositories {
+       maven { url 'https://jitpack.io' }
+   }
+
+   dependencies {
+       // MC 26.2 doesn't remap, so plain implementation is fine
+       implementation 'com.github.X3r0Day:XUtil:v1.0.0'
+   }
    ```
 
-3. Implement `XutilAddon`, register your modules and categories in `onInitializeAddon()`,
+   Without JitPack you can also drop the XUtil jar from the releases page into a
+   `libs/` folder and use `implementation files("libs/XUtil-1.0.jar")`.
+
+2. Implement `XutilAddon`, register your modules and categories in `onInitializeAddon()`,
    declare the `xutil:addons` entrypoint in your `fabric.mod.json` (see Discovery above),
    then build and drop your jar into `mods/` next to the XUtil jar.
 
 ## Notes
 
 - Addons may use Fabric API themselves (HUD rendering, tick events, etc.).
-- A published maven artifact for XUtil is future work; for now depend on the local jar.
+- The JitPack coordinates point at the GitHub release tag, so bump the version
+  to pick up API changes.
