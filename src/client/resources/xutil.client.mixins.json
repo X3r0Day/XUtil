@@ -4,6 +4,8 @@
   "package": "me.x3r0day.xutil.mixin.client",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "LightmapAccessor",
+    "LightmapMixin",
     "MinecraftUserAccessor",
     "TitleScreenMixin"
   ],

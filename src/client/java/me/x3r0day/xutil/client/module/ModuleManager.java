@@ -1,6 +1,7 @@
 package me.x3r0day.xutil.client.module;
 
 import com.mojang.logging.LogUtils;
+import me.x3r0day.xutil.client.module.impl.render.FullBright;
 import me.x3r0day.xutil.client.module.impl.world.WorldInfo;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ public final class ModuleManager {
         addCategory(Category.WORLD);
         addCategory(Category.RENDER);
         register(new WorldInfo());
+        register(new FullBright());
     }
 
     public static void register(Module module) {
