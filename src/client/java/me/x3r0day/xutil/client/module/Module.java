@@ -54,6 +54,8 @@ public abstract class Module {
             mc.player.sendOverlayMessage(Component.literal(
                 name + (enabled ? " \u00a7aON" : " \u00a7cOFF")));
         }
+
+        ModuleConfig.save();
     }
 
     protected void onEnable() {

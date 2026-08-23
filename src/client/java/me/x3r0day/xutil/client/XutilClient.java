@@ -2,10 +2,12 @@ package me.x3r0day.xutil.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import me.x3r0day.xutil.client.addon.AddonLoader;
+import me.x3r0day.xutil.client.module.ModuleConfig;
 import me.x3r0day.xutil.client.module.ModuleManager;
 import me.x3r0day.xutil.client.module.impl.world.WorldInfo;
 import me.x3r0day.xutil.client.ui.ClickGuiScreen;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
@@ -30,6 +32,9 @@ public class XutilClient implements ClientModInitializer {
 
         ModuleManager.init();
         AddonLoader.load();
+        ModuleConfig.load();
+
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> ModuleConfig.save());
 
         HudElementRegistry.addLast(
             Identifier.fromNamespaceAndPath(MOD_ID, "worldinfo"),
