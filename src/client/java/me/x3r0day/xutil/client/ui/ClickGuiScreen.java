@@ -46,11 +46,17 @@ public class ClickGuiScreen extends Screen {
         for (WindowFrame window : windows) {
             window.render(graphics, font, mouseX, mouseY);
         }
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            if (windows.get(i).hasHoveredModule()) {
+                windows.get(i).renderTooltip(graphics, font, mouseX, mouseY, width, height);
+                break;
+            }
+        }
     }
 
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        // keep the world fully visible behind the GUI, like Meteor's ClickGUI
+        graphics.fill(0, 0, width, height, 0x2C000000);
     }
 
     @Override

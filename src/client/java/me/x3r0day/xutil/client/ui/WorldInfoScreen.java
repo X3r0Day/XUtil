@@ -9,6 +9,10 @@ import net.minecraft.network.chat.Component;
 public class WorldInfoScreen extends Screen {
 
     private static final int ROW_HEIGHT = 14;
+    private static final int PANEL_Y = 20;
+    private static final int HEADER_AREA = 38;
+    private static final int PANEL_MIN_WIDTH = 220;
+    private static final String SUBTITLE = "Click a row to toggle what the overlay shows";
     private static final int COLOR_PANEL = 0xEE121218;
     private static final int COLOR_ROW = 0xC01B1B24;
     private static final int COLOR_HOVER = 0xFF333345;
@@ -27,10 +31,10 @@ public class WorldInfoScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        int panelWidth = 220;
+        int panelWidth = panelWidth();
         int panelX = (width - panelWidth) / 2;
-        int panelY = 20;
-        int listTop = panelY + 38;
+        int panelY = PANEL_Y;
+        int listTop = panelY + HEADER_AREA;
         int listBottom = listTop + WorldInfo.TOGGLES.size() * ROW_HEIGHT;
         int panelBottom = listBottom + 18;
 
@@ -38,8 +42,7 @@ public class WorldInfoScreen extends Screen {
         graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelBottom + 1, COLOR_ACCENT);
         graphics.fill(panelX, panelY, panelX + panelWidth, panelBottom, COLOR_PANEL);
         graphics.centeredText(font, "World Info", width / 2, panelY + 7, COLOR_TEXT);
-        graphics.centeredText(font, "Click a row to toggle what the overlay shows",
-            width / 2, panelY + 19, COLOR_MUTED);
+        graphics.centeredText(font, SUBTITLE, width / 2, panelY + 19, COLOR_MUTED);
 
         for (int row = 0; row < WorldInfo.TOGGLES.size(); row++) {
             WorldInfo.InfoToggle toggle = WorldInfo.TOGGLES.get(row);
@@ -74,9 +77,9 @@ public class WorldInfoScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() == 0) {
-            int panelWidth = 220;
+            int panelWidth = panelWidth();
             int panelX = (width - panelWidth) / 2;
-            int listTop = 58;
+            int listTop = PANEL_Y + HEADER_AREA;
             if (event.x() >= panelX + 4 && event.x() < panelX + panelWidth - 4
                 && event.y() >= listTop) {
                 int row = (int) ((event.y() - listTop) / ROW_HEIGHT);
@@ -87,6 +90,11 @@ public class WorldInfoScreen extends Screen {
             }
         }
         return super.mouseClicked(event, doubleClick);
+    }
+
+    private int panelWidth() {
+        int widthForText = Math.max(PANEL_MIN_WIDTH, font.width(SUBTITLE) + 24);
+        return Math.min(widthForText, width - 20);
     }
 
     @Override
