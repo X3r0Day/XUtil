@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "me.x3r0day.xutil.mixin.client",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "MinecraftUserAccessor",
+    "TitleScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}

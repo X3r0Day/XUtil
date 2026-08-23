@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "xutil",
+  "version": "${version}",
+  "name": "XUtil",
+  "description": "A client utility mod for Minecraft 26.2. ClickGUI, world info HUD, and account switching.",
+  "authors": [
+    "x3r0day"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-datagen": [
+      "me.x3r0day.xutil.client.XutilDataGenerator"
+    ],
+    "client": [
+      "me.x3r0day.xutil.client.XutilClient"
+    ],
+    "main": [
+      "me.x3r0day.xutil.Xutil"
+    ]
+  },
+  "mixins": [
+    "xutil.mixins.json",
+    {
+      "config": "xutil.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}
