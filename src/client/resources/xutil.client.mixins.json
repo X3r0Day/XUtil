@@ -4,9 +4,12 @@
   "package": "me.x3r0day.xutil.mixin.client",
   "compatibilityLevel": "JAVA_25",
   "client": [
+    "GameRendererMixin",
     "LightmapAccessor",
     "LightmapMixin",
     "MinecraftUserAccessor",
+    "MultiPlayerGameModeAccessor",
+    "ShaderManagerMixin",
     "TitleScreenMixin"
   ],
   "injectors": {
