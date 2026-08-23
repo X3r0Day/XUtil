@@ -2,8 +2,7 @@ package me.x3r0day.xutil.client.ui;
 
 import me.x3r0day.xutil.client.module.Category;
 import me.x3r0day.xutil.client.module.ModuleConfig;
-import me.x3r0day.xutil.client.module.ModuleManager;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import me.x3r0day.xutil.client.module.ModuleManager;import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -82,6 +81,16 @@ public class ClickGuiScreen extends Screen {
                 break;
             }
         }
+
+        int buttonX = 10;
+        int buttonY = height - 30;
+        boolean hoverMacros = mouseX >= buttonX && mouseX < buttonX + 64
+            && mouseY >= buttonY && mouseY < buttonY + 20;
+        graphics.fill(buttonX, buttonY, buttonX + 64, buttonY + 20,
+            hoverMacros ? 0xFF333345 : 0xE6121218);
+        graphics.fill(buttonX, buttonY, buttonX + 2, buttonY + 20, 0xFF8A5CFF);
+        graphics.centeredText(font, "Macros", buttonX + 32,
+            buttonY + (20 - font.lineHeight) / 2, 0xFFFFFFFF);
     }
 
     private static float clamp01(float value) {
@@ -143,6 +152,15 @@ public class ClickGuiScreen extends Screen {
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (closing) return true;
+
+        int buttonX = 10;
+        int buttonY = height - 30;
+        if (event.button() == 0 && event.x() >= buttonX && event.x() < buttonX + 64
+            && event.y() >= buttonY && event.y() < buttonY + 20) {
+            minecraft.gui.setScreen(new MacroListScreen(this));
+            return true;
+        }
+
         for (int i = windows.size() - 1; i >= 0; i--) {
             if (windows.get(i).mouseClicked(event)) {
                 WindowFrame window = windows.remove(i);

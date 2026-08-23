@@ -2,6 +2,7 @@ package me.x3r0day.xutil.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import me.x3r0day.xutil.client.addon.AddonLoader;
+import me.x3r0day.xutil.client.macro.MacroManager;
 import me.x3r0day.xutil.client.module.ModuleConfig;
 import me.x3r0day.xutil.client.module.ModuleManager;
 import me.x3r0day.xutil.client.module.impl.world.WorldInfo;
@@ -33,6 +34,7 @@ public class XutilClient implements ClientModInitializer {
 
         ModuleManager.init();
         AddonLoader.load();
+        MacroManager.init();
         ModuleConfig.load();
 
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> ModuleConfig.save());

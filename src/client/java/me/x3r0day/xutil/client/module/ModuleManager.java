@@ -29,6 +29,7 @@ public final class ModuleManager {
     public static void init() {
         addCategory(Category.WORLD);
         addCategory(Category.RENDER);
+        addCategory(Category.MISC);
         register(new WorldInfo());
         register(new AutoTool());
         register(new FullBright());
@@ -45,6 +46,10 @@ public final class ModuleManager {
             }
         }
         MODULES.add(module);
+    }
+
+    public static void unregister(Module module) {
+        MODULES.remove(module);
     }
 
     public static void addCategory(Category category) {

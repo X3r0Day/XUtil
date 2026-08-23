@@ -2,6 +2,7 @@ package me.x3r0day.xutil.mixin.client;
 
 import me.x3r0day.xutil.client.addon.AddonLoader;
 import me.x3r0day.xutil.client.ui.AddonWarningScreen;
+import me.x3r0day.xutil.client.ui.MacroListScreen;
 import me.x3r0day.xutil.client.ui.OfflineAccountScreen;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -24,6 +25,10 @@ public abstract class TitleScreenMixin extends Screen {
         addRenderableWidget(Button.builder(Component.literal("Offline Accounts"), button ->
                 minecraft.gui.setScreen(new OfflineAccountScreen((Screen) (Object) this)))
             .bounds(width - 126, 6, 120, 20)
+            .build());
+        addRenderableWidget(Button.builder(Component.literal("Macros"), button ->
+                minecraft.gui.setScreen(new MacroListScreen((Screen) (Object) this)))
+            .bounds(width - 126, 30, 120, 20)
             .build());
 
         if (AddonLoader.shouldShowWarning()) {
