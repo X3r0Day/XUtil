@@ -104,7 +104,6 @@ public class ChainEditScreen extends Screen {
         int panelX = (width - PANEL_WIDTH) / 2;
         int panelY = panelY();
         int listTop = listTop();
-        int listBottom = listBottom();
         int panelBottom = panelY + panelHeight();
         int buttonsTop = buttonsTop();
 
