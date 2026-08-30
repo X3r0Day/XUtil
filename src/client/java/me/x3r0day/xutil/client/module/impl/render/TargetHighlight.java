@@ -5,7 +5,9 @@ import me.x3r0day.xutil.client.module.Module;
 import me.x3r0day.xutil.client.render.MeshBuilder;
 import me.x3r0day.xutil.client.render.MeshRenderer;
 import me.x3r0day.xutil.client.render.XutilRenderPipelines;
+import me.x3r0day.xutil.client.ui.OptionListScreen;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.AABB;
@@ -27,6 +29,16 @@ public class TargetHighlight extends Module {
     public TargetHighlight() {
         super("TargetHighlight", "Highlights the living entity under your crosshair if it is in hit range.",
             Category.RENDER);
+    }
+
+    @Override
+    public void onSecondaryClick() {
+        Minecraft mc = Minecraft.getInstance();
+        Screen parent = mc.gui.screen();
+        if (parent != null) {
+            mc.gui.setScreen(OptionListScreen.createKeybindScreen("Target Highlight",
+                "Bind a key to toggle the module", getKeybind(), parent));
+        }
     }
 
     @Override

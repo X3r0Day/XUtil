@@ -9,10 +9,14 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 public class OptionListScreen extends Screen {
 
     public record KeybindRow(String label, KeyMapping keybind) {
+    }
+
+    public record CycleRow(String label, Supplier<String> value, Runnable next) {
     }
 
     private static final int ROW_HEIGHT = 14;
@@ -29,26 +33,39 @@ public class OptionListScreen extends Screen {
     private final String title;
     private final String subtitle;
     private final List<OptionToggle> toggles;
+    private final List<CycleRow> cycles;
     private final List<KeybindRow> keybinds;
     private final Screen parent;
     private KeyMapping listening;
 
     public OptionListScreen(String title, String subtitle, List<OptionToggle> toggles, Screen parent) {
-        this(title, subtitle, toggles, List.of(), parent);
+        this(title, subtitle, toggles, List.of(), List.of(), parent);
     }
 
     public OptionListScreen(String title, String subtitle, List<OptionToggle> toggles,
             List<KeybindRow> keybinds, Screen parent) {
+        this(title, subtitle, toggles, List.of(), keybinds, parent);
+    }
+
+    public OptionListScreen(String title, String subtitle, List<OptionToggle> toggles,
+            List<CycleRow> cycles, List<KeybindRow> keybinds, Screen parent) {
         super(Component.literal(title));
         this.title = title;
         this.subtitle = subtitle;
         this.toggles = toggles;
+        this.cycles = cycles;
         this.keybinds = keybinds;
         this.parent = parent;
     }
 
+    public static OptionListScreen createKeybindScreen(String title, String subtitle,
+            KeyMapping keybind, Screen parent) {
+        return new OptionListScreen(title, subtitle, List.of(),
+            List.of(new KeybindRow("Keybind", keybind)), parent);
+    }
+
     private int totalRows() {
-        return toggles.size() + keybinds.size();
+        return toggles.size() + cycles.size() + keybinds.size();
     }
 
     private int panelHeight() {
@@ -95,8 +112,17 @@ public class OptionListScreen extends Screen {
                     panelX + panelWidth - 8 - font.width(state),
                     y + (ROW_HEIGHT - font.lineHeight) / 2,
                     on ? COLOR_ON : COLOR_OFF, true);
+            } else if (row < toggles.size() + cycles.size()) {
+                CycleRow cycle = cycles.get(row - toggles.size());
+                graphics.text(font, cycle.label(), panelX + 8,
+                    y + (ROW_HEIGHT - font.lineHeight) / 2, COLOR_TEXT, true);
+                String value = cycle.value().get();
+                graphics.text(font, value,
+                    panelX + panelWidth - 8 - font.width(value),
+                    y + (ROW_HEIGHT - font.lineHeight) / 2,
+                    hovered ? COLOR_TEXT : COLOR_MUTED, true);
             } else {
-                KeybindRow keybindRow = keybinds.get(row - toggles.size());
+                KeybindRow keybindRow = keybinds.get(row - toggles.size() - cycles.size());
                 graphics.text(font, keybindRow.label(), panelX + 8,
                     y + (ROW_HEIGHT - font.lineHeight) / 2, COLOR_TEXT, true);
                 String key = listening == keybindRow.keybind()
@@ -147,8 +173,10 @@ public class OptionListScreen extends Screen {
                 if (row >= 0 && row < totalRows()) {
                     if (row < toggles.size()) {
                         toggles.get(row).toggle().run();
+                    } else if (row < toggles.size() + cycles.size()) {
+                        cycles.get(row - toggles.size()).next().run();
                     } else {
-                        listening = keybinds.get(row - toggles.size()).keybind();
+                        listening = keybinds.get(row - toggles.size() - cycles.size()).keybind();
                     }
                     return true;
                 }

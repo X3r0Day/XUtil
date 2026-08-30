@@ -3,6 +3,7 @@ package me.x3r0day.xutil.client.module.impl.world;
 import me.x3r0day.xutil.client.module.Category;
 import me.x3r0day.xutil.client.module.Module;
 import me.x3r0day.xutil.client.ui.OptionListScreen;
+import me.x3r0day.xutil.client.ui.OptionListScreen.KeybindRow;
 import me.x3r0day.xutil.client.ui.OptionToggle;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
@@ -40,7 +41,8 @@ public class AutoTool extends Module {
         Screen parent = mc.gui.screen();
         if (parent != null) {
             mc.gui.setScreen(new OptionListScreen("AutoTool",
-                "Click a row to change behavior", TOGGLES, parent));
+                "Click a row to change behavior", TOGGLES,
+                List.of(new KeybindRow("Keybind", getKeybind())), parent));
         }
     }
 
