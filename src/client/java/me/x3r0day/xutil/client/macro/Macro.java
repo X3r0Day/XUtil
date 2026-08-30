@@ -1,6 +1,7 @@
 package me.x3r0day.xutil.client.macro;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import me.x3r0day.xutil.client.macro.task.UseTask;
 import me.x3r0day.xutil.client.module.Category;
 import me.x3r0day.xutil.client.module.Module;
 import me.x3r0day.xutil.client.ui.MacroEditorScreen;
@@ -98,6 +99,7 @@ public final class Macro extends Module {
 
     public void stopRun() {
         run.stop();
+        UseTask.releaseHeldKey();
     }
 
     public void tickRun(Minecraft mc) {
@@ -140,6 +142,6 @@ public final class Macro extends Module {
 
     @Override
     protected void onDisable() {
-        run.stop();
+        stopRun();
     }
 }

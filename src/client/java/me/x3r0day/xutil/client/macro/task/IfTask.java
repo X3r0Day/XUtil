@@ -1,9 +1,8 @@
 package me.x3r0day.xutil.client.macro.task;
 
 import com.google.gson.JsonObject;
-import me.x3r0day.xutil.client.macro.MacroCondition;
-import me.x3r0day.xutil.client.macro.MacroConditions;
 import me.x3r0day.xutil.client.macro.MacroRun;
+import me.x3r0day.xutil.client.macro.MacroStatement;
 import me.x3r0day.xutil.client.macro.MacroTask;
 import me.x3r0day.xutil.client.macro.MacroTasks;
 import net.minecraft.client.Minecraft;
@@ -12,25 +11,25 @@ import java.util.List;
 
 public final class IfTask extends MacroTask {
 
-    private MacroCondition condition;
+    private MacroStatement statement;
     private final List<MacroTask> thenTasks;
     private final List<MacroTask> elseTasks;
 
     private MacroRun branch;
     private boolean decided;
 
-    public IfTask(MacroCondition condition, List<MacroTask> thenTasks, List<MacroTask> elseTasks) {
-        this.condition = condition;
+    public IfTask(MacroStatement statement, List<MacroTask> thenTasks, List<MacroTask> elseTasks) {
+        this.statement = statement;
         this.thenTasks = thenTasks;
         this.elseTasks = elseTasks;
     }
 
-    public MacroCondition getCondition() {
-        return condition;
+    public MacroStatement getStatement() {
+        return statement;
     }
 
-    public void setCondition(MacroCondition condition) {
-        this.condition = condition;
+    public void setStatement(MacroStatement statement) {
+        this.statement = statement;
     }
 
     public List<MacroTask> getThenTasks() {
@@ -48,7 +47,7 @@ public final class IfTask extends MacroTask {
 
     @Override
     public String description() {
-        return "If " + condition.description() + ": then " + thenTasks.size()
+        return "If " + statement.description() + ": then " + thenTasks.size()
             + ", else " + elseTasks.size();
     }
 
@@ -56,7 +55,7 @@ public final class IfTask extends MacroTask {
     public boolean tick(Minecraft mc) {
         if (!decided) {
             decided = true;
-            branch = new MacroRun(condition.test(mc) ? thenTasks : elseTasks);
+            branch = new MacroRun(statement.test(mc) ? thenTasks : elseTasks);
             branch.start();
         }
         branch.tick(mc);
@@ -76,7 +75,7 @@ public final class IfTask extends MacroTask {
 
     @Override
     public void toJson(JsonObject json) {
-        json.add("condition", MacroConditions.toJson(condition));
+        json.add("condition", statement.toJson());
         json.add("then", MacroTasks.toJsonArray(thenTasks));
         json.add("else", MacroTasks.toJsonArray(elseTasks));
     }

@@ -18,7 +18,6 @@ public class MacroListScreen extends Screen {
     private static final int COLOR_PANEL = 0xEE121218;
     private static final int COLOR_ROW = 0xC01B1B24;
     private static final int COLOR_HOVER = 0xFF333345;
-    private static final int COLOR_ACCENT = 0xFF8A5CFF;
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_MUTED = 0xFFAAAAAF;
 
@@ -56,7 +55,7 @@ public class MacroListScreen extends Screen {
         int panelBottom = panelY + panelHeight();
 
         graphics.fill(0, 0, width, height, 0x80000000);
-        graphics.fill(panelX - 1, panelY - 1, panelX + PANEL_WIDTH + 1, panelBottom + 1, COLOR_ACCENT);
+        graphics.fill(panelX - 1, panelY - 1, panelX + PANEL_WIDTH + 1, panelBottom + 1, GuiTheme.accent);
         graphics.fill(panelX, panelY, panelX + PANEL_WIDTH, panelBottom, COLOR_PANEL);
         graphics.centeredText(font, "Macros", width / 2, panelY + 7, COLOR_TEXT);
         graphics.centeredText(font, "Click a macro to edit its task chain", width / 2, panelY + 19, COLOR_MUTED);

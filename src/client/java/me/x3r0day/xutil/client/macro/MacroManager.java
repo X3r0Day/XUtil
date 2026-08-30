@@ -21,9 +21,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class MacroManager {
 
@@ -32,6 +35,9 @@ public final class MacroManager {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("xutil-macros.json");
 
     private static final List<Macro> MACROS = new ArrayList<>();
+
+    private static FileTime lastLoaded;
+    private static int tickCount;
 
     private MacroManager() {
     }
@@ -104,6 +110,7 @@ public final class MacroManager {
         try {
             Files.createDirectories(FILE.getParent());
             Files.writeString(FILE, GSON.toJson(root), StandardCharsets.UTF_8);
+            lastLoaded = mtime();
         } catch (IOException ignored) {
         }
     }
@@ -125,6 +132,44 @@ public final class MacroManager {
         } catch (RuntimeException | IOException exception) {
             LOGGER.error("Failed to load macros", exception);
         }
+        lastLoaded = mtime();
+    }
+
+    private static FileTime mtime() {
+        try {
+            return Files.getLastModifiedTime(FILE);
+        } catch (IOException e) {
+            return FileTime.fromMillis(0);
+        }
+    }
+
+    // watch the config file while the game runs so edits apply without a restart
+    private static void checkExternalChange() {
+        if (!Files.exists(FILE) || lastLoaded == null) {
+            return;
+        }
+        if (mtime().compareTo(lastLoaded) != 0) {
+            reload();
+        }
+    }
+
+    private static void reload() {
+        Set<String> enabled = new HashSet<>();
+        for (Macro macro : MACROS) {
+            macro.stopRun();
+            if (macro.isEnabled()) {
+                enabled.add(macro.getName());
+            }
+            ModuleManager.unregister(macro);
+        }
+        MACROS.clear();
+        load();
+        for (Macro macro : MACROS) {
+            if (enabled.contains(macro.getName())) {
+                macro.setEnabled(true);
+            }
+        }
+        LOGGER.info("Reloaded {} macros from external config change", MACROS.size());
     }
 
     private static void seedDefaults() {
@@ -140,19 +185,33 @@ public final class MacroManager {
     private static void loadNew(JsonObject root) {
         JsonArray array = GsonHelper.getAsJsonArray(root, "macros", new JsonArray());
         for (JsonElement element : array) {
-            JsonObject json = element.getAsJsonObject();
-            String name = GsonHelper.getAsString(json, "name", "");
-            Macro.Trigger trigger = Macro.Trigger.valueOf(
-                GsonHelper.getAsString(json, "trigger", "KEYBIND"));
-            String keyName = GsonHelper.getAsString(json, "key", "");
-            InputConstants.Key key = keyName.isEmpty() ? InputConstants.UNKNOWN : InputConstants.getKey(keyName);
-            List<MacroTask> tasks = MacroTasks.fromJsonArray(
-                GsonHelper.getAsJsonArray(json, "tasks", new JsonArray()));
-            Macro macro = new Macro(uniqueName(name), tasks, trigger, key);
-            MACROS.add(macro);
-            ModuleManager.register(macro);
+            try {
+                loadMacro(element.getAsJsonObject());
+            } catch (RuntimeException exception) {
+                LOGGER.warn("Skipping broken macro entry: {}", exception.getMessage());
+            }
         }
         LOGGER.info("Loaded {} macros from {}", MACROS.size(), FILE.getFileName());
+    }
+
+    private static void loadMacro(JsonObject json) {
+        String name = GsonHelper.getAsString(json, "name", "");
+        Macro.Trigger trigger = safeTrigger(GsonHelper.getAsString(json, "trigger", "KEYBIND"));
+        String keyName = GsonHelper.getAsString(json, "key", "");
+        InputConstants.Key key = keyName.isEmpty() ? InputConstants.UNKNOWN : InputConstants.getKey(keyName);
+        List<MacroTask> tasks = MacroTasks.fromJsonArray(
+            GsonHelper.getAsJsonArray(json, "tasks", new JsonArray()));
+        Macro macro = new Macro(uniqueName(name), tasks, trigger, key);
+        MACROS.add(macro);
+        ModuleManager.register(macro);
+    }
+
+    private static Macro.Trigger safeTrigger(String value) {
+        try {
+            return Macro.Trigger.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return Macro.Trigger.KEYBIND;
+        }
     }
 
     private static void migrateOld(JsonObject root) {
@@ -172,6 +231,9 @@ public final class MacroManager {
     }
 
     private static void tick(Minecraft mc) {
+        if (++tickCount % 20 == 0) {
+            checkExternalChange();
+        }
         if (mc.player == null || mc.gui.screen() != null) return;
 
         for (Macro macro : MACROS) {

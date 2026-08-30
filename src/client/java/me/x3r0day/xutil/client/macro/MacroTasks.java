@@ -8,12 +8,15 @@ import me.x3r0day.xutil.client.macro.task.AttackTask;
 import me.x3r0day.xutil.client.macro.task.BreakTask;
 import me.x3r0day.xutil.client.macro.task.ChatTask;
 import me.x3r0day.xutil.client.macro.task.IfTask;
+import me.x3r0day.xutil.client.macro.task.HotbarTask;
 import me.x3r0day.xutil.client.macro.task.JumpTask;
 import me.x3r0day.xutil.client.macro.task.LookTask;
 import me.x3r0day.xutil.client.macro.task.LoopTask;
 import me.x3r0day.xutil.client.macro.task.MoveTask;
 import me.x3r0day.xutil.client.macro.task.ToggleModuleTask;
+import me.x3r0day.xutil.client.macro.task.UseTask;
 import me.x3r0day.xutil.client.macro.task.WaitTask;
+import me.x3r0day.xutil.client.macro.task.WaitUntilTask;
 import net.minecraft.util.GsonHelper;
 
 import java.util.ArrayList;
@@ -29,12 +32,17 @@ public final class MacroTasks {
         new TaskType("Chat", "Sends a chat message or command", () -> new ChatTask("")),
         new TaskType("Attack", "Attacks the entity under the crosshair", AttackTask::new),
         new TaskType("Wait", "Waits a number of ticks", () -> new WaitTask(20)),
+        new TaskType("Wait until", "Waits until a condition is true",
+            () -> new WaitUntilTask(MacroStatement.single(new AlwaysCondition()))),
+        new TaskType("Use", "Uses the held item", UseTask::new),
+        new TaskType("Hotbar", "Selects a hotbar slot", () -> new HotbarTask(1)),
         new TaskType("Walk", "Holds forward for a number of ticks", () -> new MoveTask(20)),
         new TaskType("Jump", "Jumps once", JumpTask::new),
         new TaskType("Turn", "Turns the player by yaw and pitch degrees", () -> new LookTask(0, 0)),
         new TaskType("Module", "Toggles a module on or off", () -> new ToggleModuleTask("", ToggleModuleTask.Action.TOGGLE)),
         new TaskType("If", "Runs tasks when a condition is true, otherwise runs other tasks",
-            () -> new IfTask(new AlwaysCondition(), new ArrayList<>(), new ArrayList<>())),
+            () -> new IfTask(MacroStatement.single(new AlwaysCondition()),
+                new ArrayList<>(), new ArrayList<>())),
         new TaskType("Loop", "Repeats tasks a number of times, or forever",
             () -> new LoopTask(3, new ArrayList<>())),
         new TaskType("Break", "Stops the whole macro chain", BreakTask::new)
@@ -66,19 +74,31 @@ public final class MacroTasks {
         return tasks;
     }
 
+    private static ToggleModuleTask.Action safeAction(String value) {
+        try {
+            return ToggleModuleTask.Action.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return ToggleModuleTask.Action.TOGGLE;
+        }
+    }
+
     public static MacroTask fromJson(JsonObject json) {
         return switch (json.get("type").getAsString()) {
             case "chat" -> new ChatTask(GsonHelper.getAsString(json, "message", ""));
             case "attack" -> new AttackTask();
             case "wait" -> new WaitTask(json.get("ticks").getAsInt());
+            case "wait_until" -> new WaitUntilTask(
+                MacroStatement.fromJson(json.getAsJsonObject("condition")));
+            case "use" -> new UseTask();
+            case "hotbar" -> new HotbarTask(json.get("slot").getAsInt());
             case "move" -> new MoveTask(json.get("ticks").getAsInt());
             case "jump" -> new JumpTask();
             case "look" -> new LookTask(json.get("yaw").getAsDouble(), json.get("pitch").getAsDouble());
             case "module" -> new ToggleModuleTask(
                 GsonHelper.getAsString(json, "module", ""),
-                ToggleModuleTask.Action.valueOf(GsonHelper.getAsString(json, "action", "TOGGLE")));
+                safeAction(GsonHelper.getAsString(json, "action", "TOGGLE")));
             case "if" -> new IfTask(
-                MacroConditions.fromJson(json.getAsJsonObject("condition")),
+                MacroStatement.fromJson(json.getAsJsonObject("condition")),
                 fromJsonArray(json.getAsJsonArray("then")),
                 fromJsonArray(json.getAsJsonArray("else")));
             case "loop" -> new LoopTask(

@@ -1,21 +1,20 @@
 package me.x3r0day.xutil.client.ui;
 
-import me.x3r0day.xutil.client.macro.MacroCondition;
-import me.x3r0day.xutil.client.macro.MacroConditions;
 import me.x3r0day.xutil.client.macro.MacroManager;
 import me.x3r0day.xutil.client.macro.MacroTask;
-import me.x3r0day.xutil.client.macro.condition.EntityInRangeCondition;
-import me.x3r0day.xutil.client.macro.condition.HealthBelowCondition;
 import me.x3r0day.xutil.client.macro.task.AttackTask;
 import me.x3r0day.xutil.client.macro.task.BreakTask;
 import me.x3r0day.xutil.client.macro.task.ChatTask;
 import me.x3r0day.xutil.client.macro.task.IfTask;
+import me.x3r0day.xutil.client.macro.task.HotbarTask;
 import me.x3r0day.xutil.client.macro.task.JumpTask;
 import me.x3r0day.xutil.client.macro.task.LookTask;
 import me.x3r0day.xutil.client.macro.task.LoopTask;
 import me.x3r0day.xutil.client.macro.task.MoveTask;
 import me.x3r0day.xutil.client.macro.task.ToggleModuleTask;
+import me.x3r0day.xutil.client.macro.task.UseTask;
 import me.x3r0day.xutil.client.macro.task.WaitTask;
+import me.x3r0day.xutil.client.macro.task.WaitUntilTask;
 import me.x3r0day.xutil.client.module.Module;
 import me.x3r0day.xutil.client.module.ModuleManager;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -35,7 +34,6 @@ public class TaskEditScreen extends Screen {
     private static final int COLOR_PANEL = 0xEE121218;
     private static final int COLOR_ROW = 0xC01B1B24;
     private static final int COLOR_HOVER = 0xFF333345;
-    private static final int COLOR_ACCENT = 0xFF8A5CFF;
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_MUTED = 0xFFAAAAAF;
 
@@ -61,6 +59,9 @@ public class TaskEditScreen extends Screen {
             case "if" -> "If Task";
             case "loop" -> "Loop Task";
             case "break" -> "Break Task";
+            case "use" -> "Use Task";
+            case "wait_until" -> "Wait Until Task";
+            case "hotbar" -> "Hotbar Task";
             default -> "Task";
         };
     }
@@ -72,16 +73,15 @@ public class TaskEditScreen extends Screen {
         if (task instanceof LookTask) return 2;
         if (task instanceof ToggleModuleTask) return 2;
         if (task instanceof LoopTask) return 3;
-        if (task instanceof IfTask ifTask) return 3 + (hasConditionParam(ifTask.getCondition()) ? 1 : 0);
+        if (task instanceof WaitUntilTask) return 1;
+        if (task instanceof IfTask) return 3;
+        if (task instanceof HotbarTask) return 1;
         return 0;
     }
 
-    private static boolean hasConditionParam(MacroCondition condition) {
-        return condition instanceof EntityInRangeCondition || condition instanceof HealthBelowCondition;
-    }
-
     private int panelHeight() {
-        if (task instanceof JumpTask || task instanceof AttackTask || task instanceof BreakTask) return 120;
+        if (task instanceof JumpTask || task instanceof AttackTask || task instanceof BreakTask
+            || task instanceof UseTask) return 120;
         return 50 + rows() * ROW_HEIGHT + 46;
     }
 
@@ -117,7 +117,7 @@ public class TaskEditScreen extends Screen {
         int panelBottom = panelY + panelHeight();
 
         graphics.fill(0, 0, width, height, 0x80000000);
-        graphics.fill(panelX - 1, panelY - 1, panelX + PANEL_WIDTH + 1, panelBottom + 1, COLOR_ACCENT);
+        graphics.fill(panelX - 1, panelY - 1, panelX + PANEL_WIDTH + 1, panelBottom + 1, GuiTheme.accent);
         graphics.fill(panelX, panelY, panelX + PANEL_WIDTH, panelBottom, COLOR_PANEL);
         graphics.centeredText(font, taskTypeName(task), width / 2, panelY + 7, COLOR_TEXT);
         graphics.centeredText(font, task.description(), width / 2, panelY + 19, COLOR_MUTED);
@@ -139,20 +139,17 @@ public class TaskEditScreen extends Screen {
                 mouseX, mouseY);
             stepperRow(graphics, panelX, 1, "Times", loop.getTimes(), mouseX, mouseY);
             buttonRow(graphics, panelX, 2, "Edit body (" + loop.getBody().size() + " tasks)", mouseX, mouseY);
+        } else if (task instanceof HotbarTask hotbar) {
+            stepperRow(graphics, panelX, 0, "Slot", hotbar.getSlot(), mouseX, mouseY);
+        } else if (task instanceof WaitUntilTask waitUntil) {
+            buttonRow(graphics, panelX, 0, "Conditions (" + waitUntil.getStatement().getParts().size() + ")",
+                mouseX, mouseY);
         } else if (task instanceof IfTask ifTask) {
-            int index = 0;
-            cycleRow(graphics, panelX, index++, "Condition", conditionDisplay(ifTask.getCondition()),
+            buttonRow(graphics, panelX, 0, "Conditions (" + ifTask.getStatement().getParts().size() + ")",
                 mouseX, mouseY);
-            if (ifTask.getCondition() instanceof EntityInRangeCondition range) {
-                stepperRow(graphics, panelX, index++, "Radius", (int) range.getRadius(),
-                    mouseX, mouseY);
-            } else if (ifTask.getCondition() instanceof HealthBelowCondition health) {
-                stepperRow(graphics, panelX, index++, "Health", (int) health.getThreshold(),
-                    mouseX, mouseY);
-            }
-            buttonRow(graphics, panelX, index++, "Edit then chain (" + ifTask.getThenTasks().size() + " tasks)",
+            buttonRow(graphics, panelX, 1, "Edit then chain (" + ifTask.getThenTasks().size() + " tasks)",
                 mouseX, mouseY);
-            buttonRow(graphics, panelX, index, "Edit else chain (" + ifTask.getElseTasks().size() + " tasks)",
+            buttonRow(graphics, panelX, 2, "Edit else chain (" + ifTask.getElseTasks().size() + " tasks)",
                 mouseX, mouseY);
         }
 
@@ -214,29 +211,22 @@ public class TaskEditScreen extends Screen {
             if (clickButton(event, panelX, 2)) {
                 minecraft.gui.setScreen(new ChainEditScreen("Loop Body", loop.getBody(), this));
             }
+        } else if (task instanceof HotbarTask hotbar) {
+            applyStepper(event, panelX, 0, hotbar.getSlot(), 1, 1, 9, hotbar::setSlot);
+        } else if (task instanceof WaitUntilTask waitUntil) {
+            if (clickButton(event, panelX, 0)) {
+                minecraft.gui.setScreen(new StatementEditScreen(waitUntil.getStatement(), this));
+            }
         } else if (task instanceof IfTask ifTask) {
-            int index = 0;
-            if (clickCycle(event, panelX, index)) {
-                cycleCondition(ifTask);
-                MacroManager.save();
+            if (clickButton(event, panelX, 0)) {
+                minecraft.gui.setScreen(new StatementEditScreen(ifTask.getStatement(), this));
                 return true;
             }
-            index++;
-            if (ifTask.getCondition() instanceof EntityInRangeCondition range) {
-                applyStepper(event, panelX, index, (int) range.getRadius(), 1, 1, 64,
-                    value -> range.setRadius(value));
-                index++;
-            } else if (ifTask.getCondition() instanceof HealthBelowCondition health) {
-                applyStepper(event, panelX, index, (int) health.getThreshold(), 1, 1, 20,
-                    value -> health.setThreshold(value));
-                index++;
-            }
-            if (clickButton(event, panelX, index)) {
+            if (clickButton(event, panelX, 1)) {
                 minecraft.gui.setScreen(new ChainEditScreen("If Then", ifTask.getThenTasks(), this));
                 return true;
             }
-            index++;
-            if (clickButton(event, panelX, index)) {
+            if (clickButton(event, panelX, 2)) {
                 minecraft.gui.setScreen(new ChainEditScreen("If Else", ifTask.getElseTasks(), this));
             }
         }
@@ -264,20 +254,6 @@ public class TaskEditScreen extends Screen {
         task.setModuleName(modules.get(index).getName());
     }
 
-    private static String conditionDisplay(MacroCondition condition) {
-        for (MacroConditions.ConditionType type : MacroConditions.TYPES) {
-            if (condition.type().equals(type.factory().get().type())) {
-                return type.name();
-            }
-        }
-        return condition.description();
-    }
-
-    private void cycleCondition(IfTask ifTask) {
-        int index = MacroConditions.indexOf(ifTask.getCondition());
-        index = (index + 1) % MacroConditions.TYPES.size();
-        ifTask.setCondition(MacroConditions.TYPES.get(index).factory().get());
-    }
 
     private void stepperRow(GuiGraphicsExtractor graphics, int panelX, int row, String label,
             int value, int mouseX, int mouseY) {
