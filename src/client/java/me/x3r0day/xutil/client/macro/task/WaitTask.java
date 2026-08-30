@@ -45,6 +45,11 @@ public final class WaitTask extends MacroTask {
     }
 
     @Override
+    public void reset() {
+        remaining = -1;
+    }
+
+    @Override
     public void toJson(JsonObject json) {
         json.addProperty("ticks", ticks);
     }

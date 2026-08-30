@@ -32,6 +32,11 @@ public final class JumpTask extends MacroTask {
     }
 
     @Override
+    public void reset() {
+        pressed = false;
+    }
+
+    @Override
     public void toJson(JsonObject json) {
     }
 }

@@ -51,6 +51,11 @@ public final class MoveTask extends MacroTask {
     }
 
     @Override
+    public void reset() {
+        remaining = -1;
+    }
+
+    @Override
     public void toJson(JsonObject json) {
         json.addProperty("ticks", ticks);
     }

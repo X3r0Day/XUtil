@@ -91,11 +91,24 @@ public final class Macro extends Module {
         }
     }
 
+    public void stopRun() {
+        run.stop();
+    }
+
     public void tickRun(Minecraft mc) {
-        if (run.isRunning()) {
-            run.tick(mc);
-        } else if (isEnabled() && trigger == Trigger.EVERY_TICK) {
-            run.start();
+        try {
+            if (run.isRunning()) {
+                run.tick(mc);
+            } else if (isEnabled() && trigger == Trigger.EVERY_TICK) {
+                run.start();
+            }
+        } catch (MacroBreakException e) {
+            // BreakTask fired: stop the chain. For repeat triggers, disable
+            // the macro too so it does not restart on the next tick.
+            run.stop();
+            if (trigger == Trigger.EVERY_TICK) {
+                setEnabled(false);
+            }
         }
     }
 

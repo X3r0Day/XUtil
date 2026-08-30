@@ -57,6 +57,7 @@ public final class IfTask extends MacroTask {
         if (!decided) {
             decided = true;
             branch = new MacroRun(condition.test(mc) ? thenTasks : elseTasks);
+            branch.start();
         }
         branch.tick(mc);
         if (!branch.isRunning()) {
@@ -65,6 +66,12 @@ public final class IfTask extends MacroTask {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void reset() {
+        decided = false;
+        branch = null;
     }
 
     @Override
