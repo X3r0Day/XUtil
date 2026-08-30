@@ -1,5 +1,7 @@
 package me.x3r0day.xutil.client.macro;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -25,6 +27,7 @@ import java.util.List;
 public final class MacroManager {
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("xutil-macros.json");
 
     private static final List<Macro> MACROS = new ArrayList<>();
@@ -56,6 +59,12 @@ public final class MacroManager {
         save();
     }
 
+    public static void stopAll() {
+        for (Macro macro : MACROS) {
+            macro.stopRun();
+        }
+    }
+
     public static void save() {
         JsonArray array = new JsonArray();
         for (Macro macro : MACROS) {
@@ -70,7 +79,7 @@ public final class MacroManager {
         root.add("macros", array);
         try {
             Files.createDirectories(FILE.getParent());
-            Files.writeString(FILE, root.toString(), StandardCharsets.UTF_8);
+            Files.writeString(FILE, GSON.toJson(root), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
         }
     }

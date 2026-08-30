@@ -1,5 +1,7 @@
 package me.x3r0day.xutil.client.module;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
@@ -17,6 +19,7 @@ import java.util.Map;
 public final class ModuleConfig {
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path FILE = FabricLoader.getInstance().getConfigDir()
         .resolve("xutil-modules.json");
     private static final Path WINDOW_FILE = FabricLoader.getInstance().getConfigDir()
@@ -52,7 +55,7 @@ public final class ModuleConfig {
         }
         try {
             Files.createDirectories(FILE.getParent());
-            Files.writeString(FILE, root.toString(), StandardCharsets.UTF_8);
+            Files.writeString(FILE, GSON.toJson(root), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
         }
     }
@@ -87,7 +90,7 @@ public final class ModuleConfig {
         }
         try {
             Files.createDirectories(WINDOW_FILE.getParent());
-            Files.writeString(WINDOW_FILE, root.toString(), StandardCharsets.UTF_8);
+            Files.writeString(WINDOW_FILE, GSON.toJson(root), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
         }
     }
