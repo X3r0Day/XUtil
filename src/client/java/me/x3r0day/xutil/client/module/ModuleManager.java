@@ -2,6 +2,7 @@ package me.x3r0day.xutil.client.module;
 
 import com.mojang.logging.LogUtils;
 import me.x3r0day.xutil.client.module.impl.misc.MacroSettings;
+import me.x3r0day.xutil.client.module.impl.movement.Sprint;
 import me.x3r0day.xutil.client.module.impl.render.BreakIndicator;
 import me.x3r0day.xutil.client.module.impl.render.FullBright;
 import me.x3r0day.xutil.client.module.impl.render.TargetHighlight;
@@ -30,6 +31,7 @@ public final class ModuleManager {
     public static void init() {
         addCategory(Category.WORLD);
         addCategory(Category.RENDER);
+        addCategory(Category.MOVEMENT);
         addCategory(Category.MISC);
         register(new WorldInfo());
         register(new AutoTool());
@@ -37,6 +39,7 @@ public final class ModuleManager {
         register(new BreakIndicator());
         register(new TargetHighlight());
         register(new Zoom());
+        register(new Sprint());
         register(new MacroSettings());
     }
 

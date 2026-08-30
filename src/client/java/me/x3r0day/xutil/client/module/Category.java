@@ -14,6 +14,7 @@ public final class Category {
 
     public static final Category WORLD = new Category("World");
     public static final Category RENDER = new Category("Render");
+    public static final Category MOVEMENT = new Category("Movement");
     public static final Category MISC = new Category("Misc");
 
     @Override
