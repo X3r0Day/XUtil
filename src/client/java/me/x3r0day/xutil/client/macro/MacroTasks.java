@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import me.x3r0day.xutil.client.macro.condition.AlwaysCondition;
 import me.x3r0day.xutil.client.macro.task.AttackTask;
+import me.x3r0day.xutil.client.macro.task.BreakTask;
 import me.x3r0day.xutil.client.macro.task.ChatTask;
 import me.x3r0day.xutil.client.macro.task.IfTask;
 import me.x3r0day.xutil.client.macro.task.JumpTask;
@@ -34,7 +35,9 @@ public final class MacroTasks {
         new TaskType("Module", "Toggles a module on or off", () -> new ToggleModuleTask("", ToggleModuleTask.Action.TOGGLE)),
         new TaskType("If", "Runs tasks when a condition is true, otherwise runs other tasks",
             () -> new IfTask(new AlwaysCondition(), new ArrayList<>(), new ArrayList<>())),
-        new TaskType("Loop", "Repeats tasks a number of times", () -> new LoopTask(3, new ArrayList<>()))
+        new TaskType("Loop", "Repeats tasks a number of times, or forever",
+            () -> new LoopTask(3, new ArrayList<>())),
+        new TaskType("Break", "Stops the whole macro chain", BreakTask::new)
     );
 
     private MacroTasks() {
@@ -78,7 +81,11 @@ public final class MacroTasks {
                 MacroConditions.fromJson(json.getAsJsonObject("condition")),
                 fromJsonArray(json.getAsJsonArray("then")),
                 fromJsonArray(json.getAsJsonArray("else")));
-            case "loop" -> new LoopTask(json.get("times").getAsInt(), fromJsonArray(json.getAsJsonArray("body")));
+            case "loop" -> new LoopTask(
+                json.get("times").getAsInt(),
+                GsonHelper.getAsBoolean(json, "infinite", false),
+                fromJsonArray(json.getAsJsonArray("body")));
+            case "break" -> new BreakTask();
             default -> throw new IllegalStateException("Unknown task type: " + json.get("type").getAsString());
         };
     }

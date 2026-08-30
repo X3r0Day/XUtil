@@ -11,13 +11,19 @@ import java.util.List;
 public final class LoopTask extends MacroTask {
 
     private int times;
+    private boolean infinite;
     private final List<MacroTask> body;
 
     private int iteration = -1;
     private MacroRun bodyRun;
 
     public LoopTask(int times, List<MacroTask> body) {
+        this(times, false, body);
+    }
+
+    public LoopTask(int times, boolean infinite, List<MacroTask> body) {
         this.times = times;
+        this.infinite = infinite;
         this.body = body;
     }
 
@@ -27,6 +33,14 @@ public final class LoopTask extends MacroTask {
 
     public void setTimes(int times) {
         this.times = times;
+    }
+
+    public boolean isInfinite() {
+        return infinite;
+    }
+
+    public void setInfinite(boolean infinite) {
+        this.infinite = infinite;
     }
 
     public List<MacroTask> getBody() {
@@ -40,7 +54,8 @@ public final class LoopTask extends MacroTask {
 
     @Override
     public String description() {
-        return "Loop " + times + "x (" + body.size() + " tasks)";
+        return infinite ? "Loop forever (" + body.size() + " tasks)"
+            : "Loop " + times + "x (" + body.size() + " tasks)";
     }
 
     @Override
@@ -50,10 +65,14 @@ public final class LoopTask extends MacroTask {
         }
         if (bodyRun == null) {
             bodyRun = new MacroRun(body);
+            bodyRun.start();
         }
         bodyRun.tick(mc);
         if (!bodyRun.isRunning()) {
             bodyRun = null;
+            if (infinite) {
+                return false;
+            }
             iteration++;
             if (iteration >= times) {
                 iteration = -1;
@@ -64,8 +83,15 @@ public final class LoopTask extends MacroTask {
     }
 
     @Override
+    public void reset() {
+        iteration = -1;
+        bodyRun = null;
+    }
+
+    @Override
     public void toJson(JsonObject json) {
         json.addProperty("times", times);
+        json.addProperty("infinite", infinite);
         json.add("body", MacroTasks.toJsonArray(body));
     }
 }

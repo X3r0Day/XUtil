@@ -7,6 +7,7 @@ import me.x3r0day.xutil.client.macro.MacroTask;
 import me.x3r0day.xutil.client.macro.condition.EntityInRangeCondition;
 import me.x3r0day.xutil.client.macro.condition.HealthBelowCondition;
 import me.x3r0day.xutil.client.macro.task.AttackTask;
+import me.x3r0day.xutil.client.macro.task.BreakTask;
 import me.x3r0day.xutil.client.macro.task.ChatTask;
 import me.x3r0day.xutil.client.macro.task.IfTask;
 import me.x3r0day.xutil.client.macro.task.JumpTask;
@@ -59,6 +60,7 @@ public class TaskEditScreen extends Screen {
             case "module" -> "Module Task";
             case "if" -> "If Task";
             case "loop" -> "Loop Task";
+            case "break" -> "Break Task";
             default -> "Task";
         };
     }
@@ -69,7 +71,7 @@ public class TaskEditScreen extends Screen {
         if (task instanceof MoveTask) return 1;
         if (task instanceof LookTask) return 2;
         if (task instanceof ToggleModuleTask) return 2;
-        if (task instanceof LoopTask) return 2;
+        if (task instanceof LoopTask) return 3;
         if (task instanceof IfTask ifTask) return 3 + (hasConditionParam(ifTask.getCondition()) ? 1 : 0);
         return 0;
     }
@@ -79,7 +81,7 @@ public class TaskEditScreen extends Screen {
     }
 
     private int panelHeight() {
-        if (task instanceof JumpTask || task instanceof AttackTask) return 120;
+        if (task instanceof JumpTask || task instanceof AttackTask || task instanceof BreakTask) return 120;
         return 50 + rows() * ROW_HEIGHT + 46;
     }
 
@@ -133,8 +135,10 @@ public class TaskEditScreen extends Screen {
             cycleRow(graphics, panelX, 0, "Module", moduleDisplay(toggleModule), mouseX, mouseY);
             cycleRow(graphics, panelX, 1, "Action", toggleModule.getAction().label(), mouseX, mouseY);
         } else if (task instanceof LoopTask loop) {
-            stepperRow(graphics, panelX, 0, "Times", loop.getTimes(), mouseX, mouseY);
-            buttonRow(graphics, panelX, 1, "Edit body (" + loop.getBody().size() + " tasks)", mouseX, mouseY);
+            cycleRow(graphics, panelX, 0, "Mode", loop.isInfinite() ? "Infinite" : "Repeat N times",
+                mouseX, mouseY);
+            stepperRow(graphics, panelX, 1, "Times", loop.getTimes(), mouseX, mouseY);
+            buttonRow(graphics, panelX, 2, "Edit body (" + loop.getBody().size() + " tasks)", mouseX, mouseY);
         } else if (task instanceof IfTask ifTask) {
             int index = 0;
             cycleRow(graphics, panelX, index++, "Condition", conditionDisplay(ifTask.getCondition()),
@@ -201,8 +205,13 @@ public class TaskEditScreen extends Screen {
                 MacroManager.save();
             }
         } else if (task instanceof LoopTask loop) {
-            applyStepper(event, panelX, 0, loop.getTimes(), 1, 1, 1000, loop::setTimes);
-            if (clickButton(event, panelX, 1)) {
+            if (clickCycle(event, panelX, 0)) {
+                loop.setInfinite(!loop.isInfinite());
+                MacroManager.save();
+                return true;
+            }
+            applyStepper(event, panelX, 1, loop.getTimes(), 1, 1, 1000, loop::setTimes);
+            if (clickButton(event, panelX, 2)) {
                 minecraft.gui.setScreen(new ChainEditScreen("Loop Body", loop.getBody(), this));
             }
         } else if (task instanceof IfTask ifTask) {
