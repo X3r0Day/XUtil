@@ -6,6 +6,9 @@ import java.util.List;
 
 public final class MacroRun {
 
+    // max instant tasks per tick, 0 or less means no limit
+    public static int maxStepsPerTick = 64;
+
     private final List<MacroTask> tasks;
     private int index;
     private boolean running;
@@ -32,16 +35,19 @@ public final class MacroRun {
 
     public void tick(Minecraft mc) {
         if (!running) return;
-        if (index >= tasks.size()) {
-            running = false;
-            return;
-        }
+        // quick tasks all finish in the same tick, a 3 step chain shouldn't take 3 ticks
+        int guard = 0;
         try {
-            if (tasks.get(index).tick(mc)) {
-                index++;
-                if (index >= tasks.size()) {
-                    running = false;
+            while (running && index < tasks.size()
+                && (maxStepsPerTick <= 0 || guard < maxStepsPerTick)) {
+                if (!tasks.get(index).tick(mc)) {
+                    break;
                 }
+                index++;
+                guard++;
+            }
+            if (running && index >= tasks.size()) {
+                running = false;
             }
         } catch (MacroBreakException e) {
             running = false;

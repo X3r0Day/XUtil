@@ -63,18 +63,21 @@ public final class LoopTask extends MacroTask {
         if (iteration < 0) {
             iteration = 0;
         }
-        if (bodyRun == null) {
-            bodyRun = new MacroRun(body);
-            bodyRun.start();
-        }
-        bodyRun.tick(mc);
-        if (!bodyRun.isRunning()) {
-            bodyRun = null;
-            if (infinite) {
+        // finish whole iterations in one tick while the body is instant
+        int guard = 0;
+        while (MacroRun.maxStepsPerTick <= 0 || guard < MacroRun.maxStepsPerTick) {
+            if (bodyRun == null) {
+                bodyRun = new MacroRun(body);
+                bodyRun.start();
+            }
+            bodyRun.tick(mc);
+            if (bodyRun.isRunning()) {
                 return false;
             }
+            bodyRun = null;
             iteration++;
-            if (iteration >= times) {
+            guard++;
+            if (!infinite && iteration >= times) {
                 iteration = -1;
                 return true;
             }

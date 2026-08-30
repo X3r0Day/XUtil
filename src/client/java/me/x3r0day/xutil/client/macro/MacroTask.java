@@ -12,7 +12,7 @@ public abstract class MacroTask {
     /** Returns true when the task is finished and the chain should advance. */
     public abstract boolean tick(Minecraft mc);
 
-    /** Clears per-run state so the task starts fresh next time the chain starts. */
+    /** Reset per-run state, called when a chain starts. */
     public void reset() {
     }
 

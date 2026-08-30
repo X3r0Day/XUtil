@@ -2,6 +2,7 @@ package me.x3r0day.xutil.client.ui;
 
 import me.x3r0day.xutil.client.macro.Macro;
 import me.x3r0day.xutil.client.macro.MacroManager;
+import me.x3r0day.xutil.client.macro.MacroRun;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -30,11 +31,19 @@ public class MacroListScreen extends Screen {
 
     private int panelHeight() {
         int rows = Math.max(1, MacroManager.getMacros().size());
-        return 38 + rows * ROW_HEIGHT + 38;
+        return 38 + ROW_HEIGHT + rows * ROW_HEIGHT + 38;
     }
 
     private int panelY() {
         return (height - panelHeight()) / 2;
+    }
+
+    private int capRowY() {
+        return panelY() + 38;
+    }
+
+    private int listTop() {
+        return capRowY() + ROW_HEIGHT;
     }
 
     @Override
@@ -42,7 +51,7 @@ public class MacroListScreen extends Screen {
         List<Macro> macros = MacroManager.getMacros();
         int panelX = (width - PANEL_WIDTH) / 2;
         int panelY = panelY();
-        int listTop = panelY + 38;
+        int listTop = listTop();
         int listBottom = listTop + Math.max(1, macros.size()) * ROW_HEIGHT;
         int panelBottom = panelY + panelHeight();
 
@@ -51,6 +60,8 @@ public class MacroListScreen extends Screen {
         graphics.fill(panelX, panelY, panelX + PANEL_WIDTH, panelBottom, COLOR_PANEL);
         graphics.centeredText(font, "Macros", width / 2, panelY + 7, COLOR_TEXT);
         graphics.centeredText(font, "Click a macro to edit its task chain", width / 2, panelY + 19, COLOR_MUTED);
+
+        renderCapRow(graphics, panelX, capRowY(), mouseX, mouseY);
 
         if (macros.isEmpty()) {
             graphics.centeredText(font, "No macros yet", width / 2, listTop + 8, COLOR_MUTED);
@@ -88,6 +99,24 @@ public class MacroListScreen extends Screen {
             buttonY + (BUTTON_HEIGHT - font.lineHeight) / 2, COLOR_TEXT);
     }
 
+    private void renderCapRow(GuiGraphicsExtractor graphics, int panelX, int y,
+            int mouseX, int mouseY) {
+        int cap = MacroRun.maxStepsPerTick;
+        graphics.text(font, "Chain speed cap", panelX + 22, y + 3, COLOR_TEXT, true);
+
+        int minusX = panelX + PANEL_WIDTH - 96;
+        int plusX = panelX + PANEL_WIDTH - 36;
+        boolean hoverMinus = isOver(mouseX, mouseY, minusX, y, 28, ROW_HEIGHT - 1);
+        boolean hoverPlus = isOver(mouseX, mouseY, plusX, y, 28, ROW_HEIGHT - 1);
+        graphics.fill(minusX, y, minusX + 28, y + ROW_HEIGHT - 1, hoverMinus ? COLOR_HOVER : COLOR_ROW);
+        graphics.fill(plusX, y, plusX + 28, y + ROW_HEIGHT - 1, hoverPlus ? COLOR_HOVER : COLOR_ROW);
+        graphics.centeredText(font, "-", minusX + 14, y + 3, COLOR_TEXT);
+        graphics.centeredText(font, "+", plusX + 14, y + 3, COLOR_TEXT);
+
+        String value = cap <= 0 ? "off" : String.valueOf(cap);
+        graphics.text(font, value, minusX - 10 - font.width(value), y + 3, COLOR_MUTED, true);
+    }
+
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
     }
@@ -103,9 +132,19 @@ public class MacroListScreen extends Screen {
 
         List<Macro> macros = MacroManager.getMacros();
         int panelX = (width - PANEL_WIDTH) / 2;
-        int panelY = panelY();
-        int listTop = panelY + 38;
+        int capY = capRowY();
+        int minusX = panelX + PANEL_WIDTH - 96;
+        int plusX = panelX + PANEL_WIDTH - 36;
+        if (isOver(event.x(), event.y(), minusX, capY, 28, ROW_HEIGHT - 1)
+            || isOver(event.x(), event.y(), plusX, capY, 28, ROW_HEIGHT - 1)) {
+            int delta = event.x() >= plusX ? 16 : -16;
+            MacroRun.maxStepsPerTick = Math.max(0,
+                Math.min(1024, MacroRun.maxStepsPerTick + delta));
+            MacroManager.save();
+            return true;
+        }
 
+        int listTop = listTop();
         if (event.x() >= panelX + 4 && event.x() < panelX + PANEL_WIDTH - 4
             && event.y() >= listTop) {
             int row = (int) ((event.y() - listTop) / ROW_HEIGHT);
@@ -153,6 +192,10 @@ public class MacroListScreen extends Screen {
 
     private static boolean isOver(double mx, double my, int x, int y, int w) {
         return mx >= x && mx < x + w && my >= y && my < y + BUTTON_HEIGHT;
+    }
+
+    private static boolean isOver(double mx, double my, int x, int y, int w, int h) {
+        return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 
     private static String trimTo(String text, int max) {

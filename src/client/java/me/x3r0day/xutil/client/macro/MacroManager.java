@@ -9,6 +9,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import me.x3r0day.xutil.client.macro.task.ChatTask;
 import me.x3r0day.xutil.client.macro.task.WaitTask;
+import me.x3r0day.xutil.client.module.Module;
 import me.x3r0day.xutil.client.module.ModuleManager;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
@@ -45,7 +46,7 @@ public final class MacroManager {
     }
 
     public static Macro addMacro(String name) {
-        Macro macro = new Macro(name);
+        Macro macro = new Macro(uniqueName(name));
         MACROS.add(macro);
         ModuleManager.register(macro);
         save();
@@ -65,6 +66,28 @@ public final class MacroManager {
         }
     }
 
+    private static String uniqueName(String name) {
+        if (!isNameTaken(name)) {
+            return name;
+        }
+        int n = 2;
+        String candidate;
+        do {
+            candidate = name + " " + n++;
+        } while (isNameTaken(candidate));
+        LOGGER.warn("macro '{}' name taken, using '{}'", name, candidate);
+        return candidate;
+    }
+
+    private static boolean isNameTaken(String name) {
+        for (Module module : ModuleManager.getModules()) {
+            if (module.getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static void save() {
         JsonArray array = new JsonArray();
         for (Macro macro : MACROS) {
@@ -76,6 +99,7 @@ public final class MacroManager {
             array.add(json);
         }
         JsonObject root = new JsonObject();
+        root.addProperty("max_steps_per_tick", MacroRun.maxStepsPerTick);
         root.add("macros", array);
         try {
             Files.createDirectories(FILE.getParent());
@@ -91,6 +115,8 @@ public final class MacroManager {
         }
         try {
             JsonObject root = GsonHelper.parse(Files.readString(FILE, StandardCharsets.UTF_8));
+            MacroRun.maxStepsPerTick = Math.max(0,
+                GsonHelper.getAsInt(root, "max_steps_per_tick", MacroRun.maxStepsPerTick));
             if (GsonHelper.isValidNode(root, "macros")) {
                 loadNew(root);
             } else {
@@ -122,7 +148,7 @@ public final class MacroManager {
             InputConstants.Key key = keyName.isEmpty() ? InputConstants.UNKNOWN : InputConstants.getKey(keyName);
             List<MacroTask> tasks = MacroTasks.fromJsonArray(
                 GsonHelper.getAsJsonArray(json, "tasks", new JsonArray()));
-            Macro macro = new Macro(name, tasks, trigger, key);
+            Macro macro = new Macro(uniqueName(name), tasks, trigger, key);
             MACROS.add(macro);
             ModuleManager.register(macro);
         }
@@ -137,7 +163,7 @@ public final class MacroManager {
             InputConstants.Key key = keyName.isEmpty() ? InputConstants.UNKNOWN : InputConstants.getKey(keyName);
             List<MacroTask> tasks = new ArrayList<>();
             tasks.add(new ChatTask(message));
-            Macro macro = new Macro(name, tasks, Macro.Trigger.KEYBIND, key);
+            Macro macro = new Macro(uniqueName(name), tasks, Macro.Trigger.KEYBIND, key);
             MACROS.add(macro);
             ModuleManager.register(macro);
         }

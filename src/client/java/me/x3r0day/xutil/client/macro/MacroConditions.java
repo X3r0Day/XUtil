@@ -2,6 +2,7 @@ package me.x3r0day.xutil.client.macro;
 
 import com.google.gson.JsonObject;
 import me.x3r0day.xutil.client.macro.condition.AlwaysCondition;
+import me.x3r0day.xutil.client.macro.condition.EntityHurtCondition;
 import me.x3r0day.xutil.client.macro.condition.EntityInHitboxCondition;
 import me.x3r0day.xutil.client.macro.condition.EntityInRangeCondition;
 import me.x3r0day.xutil.client.macro.condition.HealthBelowCondition;
@@ -19,6 +20,8 @@ public final class MacroConditions {
         new ConditionType("Entity in range", "A living entity is within range", () -> new EntityInRangeCondition(5)),
         new ConditionType("Entity in hitbox", "A living entity is under the crosshair in reach",
             EntityInHitboxCondition::new),
+        new ConditionType("Recently hurt", "The entity under the crosshair was hurt in the last moments",
+            EntityHurtCondition::new),
         new ConditionType("Health below", "Your health is below the value", () -> new HealthBelowCondition(10))
     );
 
@@ -37,6 +40,7 @@ public final class MacroConditions {
             case "always" -> new AlwaysCondition();
             case "entity_range" -> new EntityInRangeCondition(json.get("radius").getAsDouble());
             case "entity_hitbox" -> new EntityInHitboxCondition();
+            case "entity_hurt" -> new EntityHurtCondition();
             case "health_below" -> new HealthBelowCondition(json.get("threshold").getAsDouble());
             default -> throw new IllegalStateException("Unknown condition type: " + json.get("type").getAsString());
         };
@@ -47,7 +51,8 @@ public final class MacroConditions {
             case "always" -> 0;
             case "entity_range" -> 1;
             case "entity_hitbox" -> 2;
-            case "health_below" -> 3;
+            case "entity_hurt" -> 3;
+            case "health_below" -> 4;
             default -> -1;
         };
     }

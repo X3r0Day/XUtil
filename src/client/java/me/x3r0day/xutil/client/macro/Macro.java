@@ -14,6 +14,7 @@ public final class Macro extends Module {
 
     public enum Trigger {
         KEYBIND("Keybind only"),
+        TOGGLE("Key toggles"),
         ON_ENABLE("Once on enable"),
         EVERY_TICK("Every tick");
 
@@ -80,7 +81,11 @@ public final class Macro extends Module {
     public void tickKey(Minecraft mc) {
         boolean down = !isKeyUnbound() && InputConstants.isKeyDown(mc.getWindow(), key.getValue());
         if (down && !keyWasDown) {
-            triggerRun();
+            if (trigger == Trigger.TOGGLE) {
+                toggle();
+            } else {
+                triggerRun();
+            }
         }
         keyWasDown = down;
     }
@@ -99,14 +104,14 @@ public final class Macro extends Module {
         try {
             if (run.isRunning()) {
                 run.tick(mc);
-            } else if (isEnabled() && trigger == Trigger.EVERY_TICK) {
+            } else if (isEnabled() && (trigger == Trigger.EVERY_TICK || trigger == Trigger.TOGGLE)) {
                 run.start();
             }
         } catch (MacroBreakException e) {
-            // BreakTask fired: stop the chain. For repeat triggers, disable
-            // the macro too so it does not restart on the next tick.
+            // break fired, stop the chain. repeat triggers get disabled too or
+            // they'd just start again next tick
             run.stop();
-            if (trigger == Trigger.EVERY_TICK) {
+            if (trigger == Trigger.EVERY_TICK || trigger == Trigger.TOGGLE) {
                 setEnabled(false);
             }
         }
