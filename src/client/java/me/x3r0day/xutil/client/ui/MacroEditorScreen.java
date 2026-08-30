@@ -48,7 +48,7 @@ public class MacroEditorScreen extends ChainEditScreen {
         String key = listening ? "..." : macro.isKeyUnbound()
             ? "unbound" : macro.getKey().getDisplayName().getString();
         graphics.text(font, key, panelX + PANEL_WIDTH - 22 - font.width(key), keyY + 3,
-            listening ? COLOR_ACCENT : COLOR_MUTED, true);
+            listening ? GuiTheme.accent : COLOR_MUTED, true);
     }
 
     @Override

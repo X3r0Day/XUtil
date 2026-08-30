@@ -19,7 +19,6 @@ public class ChainEditScreen extends Screen {
     protected static final int COLOR_ROW = 0xC01B1B24;
     protected static final int COLOR_HOVER = 0xFF333345;
     protected static final int COLOR_SELECTED = 0xFF3E3E58;
-    protected static final int COLOR_ACCENT = 0xFF8A5CFF;
     protected static final int COLOR_TEXT = 0xFFFFFFFF;
     protected static final int COLOR_MUTED = 0xFFAAAAAF;
 
@@ -108,7 +107,7 @@ public class ChainEditScreen extends Screen {
         int buttonsTop = buttonsTop();
 
         graphics.fill(0, 0, width, height, 0x80000000);
-        graphics.fill(panelX - 1, panelY - 1, panelX + PANEL_WIDTH + 1, panelBottom + 1, COLOR_ACCENT);
+        graphics.fill(panelX - 1, panelY - 1, panelX + PANEL_WIDTH + 1, panelBottom + 1, GuiTheme.accent);
         graphics.fill(panelX, panelY, panelX + PANEL_WIDTH, panelBottom, COLOR_PANEL);
         graphics.centeredText(font, screenTitle, width / 2, panelY + 7, COLOR_TEXT);
 

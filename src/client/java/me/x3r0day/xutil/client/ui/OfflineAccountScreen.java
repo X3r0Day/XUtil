@@ -15,7 +15,6 @@ public class OfflineAccountScreen extends Screen {
     private static final int PANEL_WIDTH = 300;
     private static final int PANEL_HEIGHT = 170;
     private static final int COLOR_PANEL = 0xEE121218;
-    private static final int COLOR_ACCENT = 0xFF8A5CFF;
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_MUTED = 0xFFAAAAAF;
     private static final int COLOR_SUCCESS = 0xFF62E67D;
@@ -103,7 +102,7 @@ public class OfflineAccountScreen extends Screen {
         int y = (height - PANEL_HEIGHT) / 2;
 
         graphics.fill(0, 0, width, height, 0x80000000);
-        graphics.fill(x - 1, y - 1, x + PANEL_WIDTH + 1, y + PANEL_HEIGHT + 1, COLOR_ACCENT);
+        graphics.fill(x - 1, y - 1, x + PANEL_WIDTH + 1, y + PANEL_HEIGHT + 1, GuiTheme.accent);
         graphics.fill(x, y, x + PANEL_WIDTH, y + PANEL_HEIGHT, COLOR_PANEL);
         graphics.centeredText(font, "Account Switcher", width / 2, y + 9, COLOR_TEXT);
         graphics.centeredText(font, "Current: " + minecraft.getUser().getName(),

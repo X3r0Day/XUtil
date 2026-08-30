@@ -21,7 +21,6 @@ public class OptionListScreen extends Screen {
     private static final int COLOR_PANEL = 0xEE121218;
     private static final int COLOR_ROW = 0xC01B1B24;
     private static final int COLOR_HOVER = 0xFF333345;
-    private static final int COLOR_ACCENT = 0xFF8A5CFF;
     private static final int COLOR_TEXT = 0xFFFFFFFF;
     private static final int COLOR_MUTED = 0xFFAAAAAF;
     private static final int COLOR_ON = 0xFF62E67D;
@@ -70,14 +69,14 @@ public class OptionListScreen extends Screen {
         int panelBottom = listBottom + 18;
 
         graphics.fill(0, 0, width, height, 0x90000000);
-        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelBottom + 1, COLOR_ACCENT);
+        graphics.fill(panelX - 1, panelY - 1, panelX + panelWidth + 1, panelBottom + 1, GuiTheme.accent);
         graphics.fill(panelX, panelY, panelX + panelWidth, panelBottom, COLOR_PANEL);
         graphics.centeredText(font, title, width / 2, panelY + 7, COLOR_TEXT);
         String subtitleText = listening != null
             ? "Press a key, Esc to cancel"
             : subtitle;
         graphics.centeredText(font, subtitleText, width / 2, panelY + 19,
-            listening != null ? COLOR_ACCENT : COLOR_MUTED);
+            listening != null ? GuiTheme.accent : COLOR_MUTED);
 
         for (int row = 0; row < totalRows(); row++) {
             int y = listTop + row * ROW_HEIGHT;
@@ -106,7 +105,7 @@ public class OptionListScreen extends Screen {
                 graphics.text(font, key,
                     panelX + panelWidth - 8 - font.width(key),
                     y + (ROW_HEIGHT - font.lineHeight) / 2,
-                    listening == keybindRow.keybind() ? COLOR_ACCENT : COLOR_MUTED, true);
+                    listening == keybindRow.keybind() ? GuiTheme.accent : COLOR_MUTED, true);
             }
         }
 

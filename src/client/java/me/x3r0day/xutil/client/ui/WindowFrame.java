@@ -9,6 +9,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class WindowFrame {
@@ -19,7 +20,6 @@ public class WindowFrame {
     private static final int EMPTY_BODY_HEIGHT = 12;
     private static final int SHADOW_OFFSET = 3;
 
-    private static final int ACCENT = 0xFF8A5CFF;
     private static final int COLOR_HEADER = 0xE61B1B24;
     private static final int COLOR_BODY = 0xE6121218;
     private static final int COLOR_HOVER = 0x1AFFFFFF;
@@ -64,8 +64,22 @@ public class WindowFrame {
         this.y = y;
     }
 
-    public static int heightFor(Category category) {
-        return HEADER_HEIGHT + bodyHeight(ModuleManager.getByCategory(category).size());
+    public static int heightFor(Category category, String query) {
+        return HEADER_HEIGHT + bodyHeight(visibleModules(category, query).size());
+    }
+
+    private static List<Module> visibleModules(Category category, String query) {
+        List<Module> all = ModuleManager.getByCategory(category);
+        if (query == null || query.isEmpty()) {
+            return all;
+        }
+        List<Module> out = new ArrayList<>();
+        for (Module module : all) {
+            if (module.getName().toLowerCase().contains(query)) {
+                out.add(module);
+            }
+        }
+        return out;
     }
 
     private static int bodyHeight(int moduleCount) {
@@ -87,8 +101,9 @@ public class WindowFrame {
         return 1f + c3 * u * u * u + c1 * u * u;
     }
 
-    public void render(GuiGraphicsExtractor graphics, Font font, int mouseX, int mouseY, float anim) {
-        List<Module> modules = ModuleManager.getByCategory(category);
+    public void render(GuiGraphicsExtractor graphics, Font font, int mouseX, int mouseY, float anim,
+            String query) {
+        List<Module> modules = visibleModules(category, query);
         int bodyHeight = bodyHeight(modules.size());
         int windowHeight = HEADER_HEIGHT + bodyHeight;
 
@@ -106,7 +121,7 @@ public class WindowFrame {
             y + SHADOW_OFFSET + windowHeight, fade(COLOR_SHADOW, alpha));
 
         graphics.fill(x, y, x + WIDTH, y + HEADER_HEIGHT, fade(COLOR_HEADER, alpha));
-        graphics.fill(x, y + HEADER_HEIGHT - 2, x + WIDTH, y + HEADER_HEIGHT, fade(ACCENT, alpha));
+        graphics.fill(x, y + HEADER_HEIGHT - 2, x + WIDTH, y + HEADER_HEIGHT, fade(GuiTheme.accent, alpha));
         graphics.fill(x, y + HEADER_HEIGHT, x + WIDTH, y + HEADER_HEIGHT + bodyHeight,
             fade(COLOR_BODY, alpha));
 
@@ -128,7 +143,7 @@ public class WindowFrame {
             if (hovering) {
                 hovered = module;
                 graphics.fill(x, entryY, x + WIDTH, entryY + ENTRY_HEIGHT, fade(COLOR_HOVER, alpha));
-                graphics.fill(x, entryY, x + 2, entryY + ENTRY_HEIGHT, fade(ACCENT, alpha));
+                graphics.fill(x, entryY, x + 2, entryY + ENTRY_HEIGHT, fade(GuiTheme.accent, alpha));
             }
             graphics.fill(x + 4, entryY, x + WIDTH - 4, entryY + 1, fade(COLOR_SEPARATOR, alpha));
 
@@ -141,7 +156,7 @@ public class WindowFrame {
             int indicatorY = entryY + (ENTRY_HEIGHT - indicatorSize) / 2;
             graphics.fill(indicatorX, indicatorY, indicatorX + indicatorSize,
                 indicatorY + indicatorSize,
-                fade(module.isEnabled() ? ACCENT : COLOR_INDICATOR_OFF, alpha));
+                fade(module.isEnabled() ? GuiTheme.accent : COLOR_INDICATOR_OFF, alpha));
             entryY += ENTRY_HEIGHT;
         }
 
@@ -171,7 +186,7 @@ public class WindowFrame {
 
         graphics.fill(tooltipX, tooltipY, tooltipX + TOOLTIP_WIDTH, tooltipY + tooltipHeight,
             COLOR_TOOLTIP_BG);
-        graphics.fill(tooltipX, tooltipY, tooltipX + 2, tooltipY + tooltipHeight, ACCENT);
+        graphics.fill(tooltipX, tooltipY, tooltipX + 2, tooltipY + tooltipHeight, GuiTheme.accent);
         graphics.text(font, hovered.getName(), tooltipX + 6, tooltipY + 4, COLOR_TEXT_ON, true);
 
         int lineY = tooltipY + 6 + font.lineHeight;
@@ -181,7 +196,7 @@ public class WindowFrame {
         }
     }
 
-    public boolean mouseClicked(MouseButtonEvent event) {
+    public boolean mouseClicked(MouseButtonEvent event, String query) {
         double mouseX = event.x();
         double mouseY = event.y();
         if (mouseX < x || mouseX >= x + WIDTH) return false;
@@ -194,7 +209,7 @@ public class WindowFrame {
         }
 
         int entryY = y + HEADER_HEIGHT;
-        for (Module module : ModuleManager.getByCategory(category)) {
+        for (Module module : visibleModules(category, query)) {
             if (mouseY >= entryY && mouseY < entryY + ENTRY_HEIGHT) {
                 if (event.button() == 0) {
                     module.toggle();

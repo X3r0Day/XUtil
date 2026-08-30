@@ -7,6 +7,7 @@ import me.x3r0day.xutil.client.module.ModuleConfig;
 import me.x3r0day.xutil.client.module.ModuleManager;
 import me.x3r0day.xutil.client.module.impl.world.WorldInfo;
 import me.x3r0day.xutil.client.ui.ClickGuiScreen;
+import me.x3r0day.xutil.client.ui.GuiTheme;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -36,6 +37,7 @@ public class XutilClient implements ClientModInitializer {
         AddonLoader.load();
         MacroManager.init();
         ModuleConfig.load();
+        GuiTheme.load();
 
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> ModuleConfig.save());
 
