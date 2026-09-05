@@ -4,6 +4,7 @@
   "version": "${version}",
   "name": "XUtil",
   "description": "A client utility mod for Minecraft 26.2. ClickGUI, world info HUD, and account switching.",
+  "icon": "assets/xutil/icon.png",
   "authors": [
     "x3r0day"
   ],
