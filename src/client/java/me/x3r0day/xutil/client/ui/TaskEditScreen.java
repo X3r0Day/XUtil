@@ -70,17 +70,18 @@ public class TaskEditScreen extends Screen {
         if (task instanceof ChatTask) return 1;
         if (task instanceof WaitTask) return 1;
         if (task instanceof MoveTask) return 1;
-        if (task instanceof LookTask) return 2;
+        if (task instanceof LookTask look) return look.getMode() == LookTask.Mode.TURN ? 3 : 5;
         if (task instanceof ToggleModuleTask) return 2;
         if (task instanceof LoopTask) return 3;
         if (task instanceof WaitUntilTask) return 1;
         if (task instanceof IfTask) return 3;
         if (task instanceof HotbarTask) return 1;
+        if (task instanceof AttackTask attack) return 2 + (attack.getMode() == AttackTask.Mode.CROSSHAIR ? 0 : 2);
         return 0;
     }
 
     private int panelHeight() {
-        if (task instanceof JumpTask || task instanceof AttackTask || task instanceof BreakTask
+        if (task instanceof JumpTask || task instanceof BreakTask
             || task instanceof UseTask) return 120;
         return 50 + rows() * ROW_HEIGHT + 46;
     }
@@ -124,13 +125,30 @@ public class TaskEditScreen extends Screen {
 
         if (task instanceof ChatTask) {
             graphics.text(font, "Message", panelX + 16, rowTop(0), COLOR_TEXT, false);
+        } else if (task instanceof AttackTask attack) {
+            cycleRow(graphics, panelX, 0, "Mode", attack.getMode().label(), mouseX, mouseY);
+            cycleRow(graphics, panelX, 1, "Wait cooldown", attack.isWaitCooldown() ? "ON" : "OFF",
+                mouseX, mouseY);
+            if (attack.getMode() != AttackTask.Mode.CROSSHAIR) {
+                stepperRow(graphics, panelX, 2, "Range", (int) attack.getRange(), mouseX, mouseY);
+                cycleRow(graphics, panelX, 3, "Filter", attack.getFilter().label(), mouseX, mouseY);
+            }
         } else if (task instanceof WaitTask wait) {
             stepperRow(graphics, panelX, 0, "Ticks", wait.getTicks(), mouseX, mouseY);
         } else if (task instanceof MoveTask move) {
             stepperRow(graphics, panelX, 0, "Ticks", move.getTicks(), mouseX, mouseY);
         } else if (task instanceof LookTask look) {
-            stepperRow(graphics, panelX, 0, "Yaw", (int) look.getYaw(), mouseX, mouseY);
-            stepperRow(graphics, panelX, 1, "Pitch", (int) look.getPitch(), mouseX, mouseY);
+            cycleRow(graphics, panelX, 0, "Mode", look.getMode().label(), mouseX, mouseY);
+            if (look.getMode() == LookTask.Mode.TURN) {
+                stepperRow(graphics, panelX, 1, "Yaw", (int) look.getYaw(), mouseX, mouseY);
+                stepperRow(graphics, panelX, 2, "Pitch", (int) look.getPitch(), mouseX, mouseY);
+            } else {
+                stepperRow(graphics, panelX, 1, "Range", (int) look.getRange(), mouseX, mouseY);
+                cycleRow(graphics, panelX, 2, "Sort", look.getSort().label(), mouseX, mouseY);
+                cycleRow(graphics, panelX, 3, "Filter", look.getFilter().label(), mouseX, mouseY);
+                cycleRow(graphics, panelX, 4, "Smooth aim", look.isSmooth() ? "ON" : "OFF",
+                    mouseX, mouseY);
+            }
         } else if (task instanceof ToggleModuleTask toggleModule) {
             cycleRow(graphics, panelX, 0, "Module", moduleDisplay(toggleModule), mouseX, mouseY);
             cycleRow(graphics, panelX, 1, "Action", toggleModule.getAction().label(), mouseX, mouseY);
@@ -186,13 +204,58 @@ public class TaskEditScreen extends Screen {
 
         if (task instanceof WaitTask wait) {
             applyStepper(event, panelX, 0, wait.getTicks(), 5, 1, 6000, wait::setTicks);
+        } else if (task instanceof AttackTask attack) {
+            if (clickCycle(event, panelX, 0)) {
+                attack.setMode(attack.getMode().next());
+                MacroManager.save();
+                return true;
+            }
+            if (clickCycle(event, panelX, 1)) {
+                attack.setWaitCooldown(!attack.isWaitCooldown());
+                MacroManager.save();
+                return true;
+            }
+            if (attack.getMode() != AttackTask.Mode.CROSSHAIR) {
+                applyStepper(event, panelX, 2, (int) attack.getRange(), 1, 1, 64,
+                    value -> attack.setRange(value));
+                if (clickCycle(event, panelX, 3)) {
+                    attack.setFilter(attack.getFilter().next());
+                    MacroManager.save();
+                    return true;
+                }
+            }
         } else if (task instanceof MoveTask move) {
             applyStepper(event, panelX, 0, move.getTicks(), 5, 1, 6000, move::setTicks);
         } else if (task instanceof LookTask look) {
-            applyStepper(event, panelX, 0, (int) look.getYaw(), 5, -180, 180,
-                value -> look.setYaw(value));
-            applyStepper(event, panelX, 1, (int) look.getPitch(), 5, -90, 90,
-                value -> look.setPitch(value));
+            if (clickCycle(event, panelX, 0)) {
+                look.setMode(look.getMode().next());
+                MacroManager.save();
+                return true;
+            }
+            if (look.getMode() == LookTask.Mode.TURN) {
+                applyStepper(event, panelX, 1, (int) look.getYaw(), 5, -180, 180,
+                    value -> look.setYaw(value));
+                applyStepper(event, panelX, 2, (int) look.getPitch(), 5, -90, 90,
+                    value -> look.setPitch(value));
+            } else {
+                applyStepper(event, panelX, 1, (int) look.getRange(), 1, 1, 64,
+                    value -> look.setRange(value));
+                if (clickCycle(event, panelX, 2)) {
+                    look.setSort(look.getSort().next());
+                    MacroManager.save();
+                    return true;
+                }
+                if (clickCycle(event, panelX, 3)) {
+                    look.setFilter(look.getFilter().next());
+                    MacroManager.save();
+                    return true;
+                }
+                if (clickCycle(event, panelX, 4)) {
+                    look.setSmooth(!look.isSmooth());
+                    MacroManager.save();
+                    return true;
+                }
+            }
         } else if (task instanceof ToggleModuleTask toggleModule) {
             if (clickCycle(event, panelX, 0)) {
                 cycleModule(toggleModule);

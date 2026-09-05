@@ -30,7 +30,7 @@ public final class MacroTasks {
 
     public static final List<TaskType> TYPES = List.of(
         new TaskType("Chat", "Sends a chat message or command", () -> new ChatTask("")),
-        new TaskType("Attack", "Attacks the entity under the crosshair", AttackTask::new),
+        new TaskType("Attack", "Attacks by crosshair, nearest or all entities", AttackTask::new),
         new TaskType("Wait", "Waits a number of ticks", () -> new WaitTask(20)),
         new TaskType("Wait until", "Waits until a condition is true",
             () -> new WaitUntilTask(MacroStatement.single(new AlwaysCondition()))),
@@ -38,7 +38,7 @@ public final class MacroTasks {
         new TaskType("Hotbar", "Selects a hotbar slot", () -> new HotbarTask(1)),
         new TaskType("Walk", "Holds forward for a number of ticks", () -> new MoveTask(20)),
         new TaskType("Jump", "Jumps once", JumpTask::new),
-        new TaskType("Turn", "Turns the player by yaw and pitch degrees", () -> new LookTask(0, 0)),
+        new TaskType("Turn", "Turns by yaw and pitch, or aims at a target", LookTask::new),
         new TaskType("Module", "Toggles a module on or off", () -> new ToggleModuleTask("", ToggleModuleTask.Action.TOGGLE)),
         new TaskType("If", "Runs tasks when a condition is true, otherwise runs other tasks",
             () -> new IfTask(MacroStatement.single(new AlwaysCondition()),
@@ -85,7 +85,7 @@ public final class MacroTasks {
     public static MacroTask fromJson(JsonObject json) {
         return switch (json.get("type").getAsString()) {
             case "chat" -> new ChatTask(GsonHelper.getAsString(json, "message", ""));
-            case "attack" -> new AttackTask();
+            case "attack" -> AttackTask.fromJson(json);
             case "wait" -> new WaitTask(json.get("ticks").getAsInt());
             case "wait_until" -> new WaitUntilTask(
                 MacroStatement.fromJson(json.getAsJsonObject("condition")));
@@ -93,7 +93,7 @@ public final class MacroTasks {
             case "hotbar" -> new HotbarTask(json.get("slot").getAsInt());
             case "move" -> new MoveTask(json.get("ticks").getAsInt());
             case "jump" -> new JumpTask();
-            case "look" -> new LookTask(json.get("yaw").getAsDouble(), json.get("pitch").getAsDouble());
+            case "look" -> LookTask.fromJson(json);
             case "module" -> new ToggleModuleTask(
                 GsonHelper.getAsString(json, "module", ""),
                 safeAction(GsonHelper.getAsString(json, "action", "TOGGLE")));
