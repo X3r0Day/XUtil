@@ -1,7 +1,12 @@
 package me.x3r0day.xutil.client.repeater;
 
+import me.x3r0day.xutil.client.module.Module;
+import me.x3r0day.xutil.client.module.ModuleManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public final class ReplayEngine {
 
@@ -10,6 +15,7 @@ public final class ReplayEngine {
     private static int remaining;
     private static boolean loop;
     private static boolean mouseLocked;
+    private static final Set<String> toggledModules = new HashSet<>();
 
     private ReplayEngine() {
     }
@@ -35,6 +41,7 @@ public final class ReplayEngine {
         frameIndex = 0;
         remaining = 0;
         mouseLocked = recording.isLockMouse();
+        toggledModules.clear();
     }
 
     public static void stop() {
@@ -44,6 +51,7 @@ public final class ReplayEngine {
         if (mc.options != null) {
             KeyBits.releaseAll(mc);
         }
+        revertModules();
     }
 
     public static void tick(Minecraft mc) {
@@ -53,12 +61,20 @@ public final class ReplayEngine {
             if (frameIndex >= playing.getFrames().size()) {
                 if (loop) {
                     frameIndex = 0;
+                    revertModules();
                 } else {
                     stop();
                     return;
                 }
             } else {
-                remaining = playing.getFrames().get(frameIndex).c();
+                Recording.Frame frame = playing.getFrames().get(frameIndex);
+                if (frameIndex == 0) {
+                    mc.player.setPos(playing.getStartX(), playing.getStartY(), playing.getStartZ());
+                    mc.player.setYRot(playing.getStartYaw());
+                    mc.player.setXRot(playing.getStartPitch());
+                }
+                remaining = frame.c();
+                applyModules(frame);
             }
         }
 
@@ -78,6 +94,29 @@ public final class ReplayEngine {
         remaining--;
         if (remaining <= 0) {
             frameIndex++;
+        }
+    }
+
+    private static void applyModules(Recording.Frame frame) {
+        for (String name : frame.modules()) {
+            toggleModule(name);
+            toggledModules.add(name);
+        }
+    }
+
+    private static void revertModules() {
+        for (String name : toggledModules) {
+            toggleModule(name);
+        }
+        toggledModules.clear();
+    }
+
+    private static void toggleModule(String name) {
+        for (Module module : ModuleManager.getModules()) {
+            if (module.getName().equals(name)) {
+                module.toggle();
+                return;
+            }
         }
     }
 }

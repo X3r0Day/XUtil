@@ -2,6 +2,8 @@ package me.x3r0day.xutil.client.macro.task;
 
 import com.google.gson.JsonObject;
 import me.x3r0day.xutil.client.macro.MacroTask;
+import me.x3r0day.xutil.client.module.Module;
+import me.x3r0day.xutil.client.module.ModuleManager;
 import me.x3r0day.xutil.client.repeater.KeyBits;
 import me.x3r0day.xutil.client.repeater.Recording;
 import me.x3r0day.xutil.client.repeater.RecordingStore;
@@ -10,6 +12,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.util.GsonHelper;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public final class ReplayTask extends MacroTask {
 
     private String recording = "";
@@ -17,6 +22,7 @@ public final class ReplayTask extends MacroTask {
     private int frameIndex;
     private int remaining;
     private long lastTick = Long.MIN_VALUE;
+    private final Set<String> toggledModules = new HashSet<>();
 
     public ReplayTask() {
     }
@@ -65,7 +71,17 @@ public final class ReplayTask extends MacroTask {
                 finish(mc);
                 return true;
             }
-            remaining = playing.getFrames().get(frameIndex).c();
+            Recording.Frame frame = playing.getFrames().get(frameIndex);
+            if (frameIndex == 0) {
+                mc.player.setPos(playing.getStartX(), playing.getStartY(), playing.getStartZ());
+                mc.player.setYRot(playing.getStartYaw());
+                mc.player.setXRot(playing.getStartPitch());
+            }
+            remaining = frame.c();
+            for (String name : frame.modules()) {
+                toggleModule(name);
+                toggledModules.add(name);
+            }
         }
 
         Recording.Frame frame = playing.getFrames().get(frameIndex);
@@ -93,7 +109,20 @@ public final class ReplayTask extends MacroTask {
     private void finish(Minecraft mc) {
         KeyBits.releaseAll(mc);
         ReplayEngine.setMouseLocked(false);
+        for (String name : toggledModules) {
+            toggleModule(name);
+        }
+        toggledModules.clear();
         playing = null;
+    }
+
+    private void toggleModule(String name) {
+        for (Module module : ModuleManager.getModules()) {
+            if (module.getName().equals(name)) {
+                module.toggle();
+                return;
+            }
+        }
     }
 
     @Override
