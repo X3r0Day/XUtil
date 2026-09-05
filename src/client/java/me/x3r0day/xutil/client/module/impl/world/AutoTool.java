@@ -5,12 +5,14 @@ import me.x3r0day.xutil.client.module.Module;
 import me.x3r0day.xutil.client.ui.OptionListScreen;
 import me.x3r0day.xutil.client.ui.OptionListScreen.KeybindRow;
 import me.x3r0day.xutil.client.ui.OptionToggle;
+import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
@@ -33,6 +35,16 @@ public class AutoTool extends Module {
 
     public AutoTool() {
         super("AutoTool", "Picks the best tool for the block you break, enchants included.", Category.WORLD);
+    }
+
+    @Override
+    protected void saveSettings(JsonObject json) {
+        json.addProperty("recheck", recheck);
+    }
+
+    @Override
+    protected void loadSettings(JsonObject json) {
+        recheck = GsonHelper.getAsBoolean(json, "recheck", false);
     }
 
     @Override

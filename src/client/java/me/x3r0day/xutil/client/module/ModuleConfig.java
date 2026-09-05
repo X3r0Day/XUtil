@@ -3,6 +3,7 @@ package me.x3r0day.xutil.client.module;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.FabricLoader;
@@ -37,9 +38,24 @@ public final class ModuleConfig {
             int restored = 0;
             for (Module module : ModuleManager.getModules()) {
                 String name = module.getName();
-                if (GsonHelper.isBooleanValue(root, name) && GsonHelper.getAsBoolean(root, name)) {
-                    module.setEnabled(true);
-                    restored++;
+                if (!root.has(name)) {
+                    continue;
+                }
+                JsonElement element = root.get(name);
+                if (element.isJsonPrimitive()) {
+                    if (GsonHelper.isBooleanValue(root, name) && GsonHelper.getAsBoolean(root, name)) {
+                        module.setEnabled(true);
+                        restored++;
+                    }
+                    continue;
+                }
+                if (element.isJsonObject()) {
+                    JsonObject entry = element.getAsJsonObject();
+                    if (GsonHelper.getAsBoolean(entry, "enabled", false)) {
+                        module.setEnabled(true);
+                        restored++;
+                    }
+                    module.loadSettings(entry);
                 }
             }
             LOGGER.info("Restored {} enabled modules from {}", restored, FILE.getFileName());
@@ -51,7 +67,10 @@ public final class ModuleConfig {
     public static void save() {
         JsonObject root = new JsonObject();
         for (Module module : ModuleManager.getModules()) {
-            root.addProperty(module.getName(), module.isEnabled());
+            JsonObject entry = new JsonObject();
+            entry.addProperty("enabled", module.isEnabled());
+            module.saveSettings(entry);
+            root.add(module.getName(), entry);
         }
         try {
             Files.createDirectories(FILE.getParent());

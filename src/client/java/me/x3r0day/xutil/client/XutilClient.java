@@ -3,9 +3,12 @@ package me.x3r0day.xutil.client;
 import com.mojang.blaze3d.platform.InputConstants;
 import me.x3r0day.xutil.client.addon.AddonLoader;
 import me.x3r0day.xutil.client.macro.MacroManager;
+import me.x3r0day.xutil.client.module.KeybindConfig;
 import me.x3r0day.xutil.client.module.ModuleConfig;
 import me.x3r0day.xutil.client.module.ModuleManager;
+import me.x3r0day.xutil.client.module.impl.misc.Repeater;
 import me.x3r0day.xutil.client.module.impl.world.WorldInfo;
+import me.x3r0day.xutil.client.repeater.RecordingStore;
 import me.x3r0day.xutil.client.ui.ClickGuiScreen;
 import me.x3r0day.xutil.client.ui.GuiTheme;
 import net.fabricmc.api.ClientModInitializer;
@@ -38,12 +41,21 @@ public class XutilClient implements ClientModInitializer {
         MacroManager.init();
         ModuleConfig.load();
         GuiTheme.load();
+        RecordingStore.load();
+        KeybindConfig.load();
 
-        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> ModuleConfig.save());
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {
+            ModuleConfig.save();
+            KeybindConfig.save();
+        });
 
         HudElementRegistry.addLast(
             Identifier.fromNamespaceAndPath(MOD_ID, "worldinfo"),
             (graphics, deltaTracker) -> WorldInfo.render(graphics, Minecraft.getInstance())
+        );
+        HudElementRegistry.addLast(
+            Identifier.fromNamespaceAndPath(MOD_ID, "repeater"),
+            (graphics, deltaTracker) -> Repeater.renderHud(graphics, Minecraft.getInstance())
         );
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             ModuleManager.tick(client);

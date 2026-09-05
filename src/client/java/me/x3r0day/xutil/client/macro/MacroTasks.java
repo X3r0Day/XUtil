@@ -13,6 +13,7 @@ import me.x3r0day.xutil.client.macro.task.JumpTask;
 import me.x3r0day.xutil.client.macro.task.LookTask;
 import me.x3r0day.xutil.client.macro.task.LoopTask;
 import me.x3r0day.xutil.client.macro.task.MoveTask;
+import me.x3r0day.xutil.client.macro.task.ReplayTask;
 import me.x3r0day.xutil.client.macro.task.ToggleModuleTask;
 import me.x3r0day.xutil.client.macro.task.UseTask;
 import me.x3r0day.xutil.client.macro.task.WaitTask;
@@ -38,6 +39,7 @@ public final class MacroTasks {
         new TaskType("Hotbar", "Selects a hotbar slot", () -> new HotbarTask(1)),
         new TaskType("Walk", "Holds forward for a number of ticks", () -> new MoveTask(20)),
         new TaskType("Jump", "Jumps once", JumpTask::new),
+        new TaskType("Replay", "Replays a saved recording", ReplayTask::new),
         new TaskType("Turn", "Turns by yaw and pitch, or aims at a target", LookTask::new),
         new TaskType("Module", "Toggles a module on or off", () -> new ToggleModuleTask("", ToggleModuleTask.Action.TOGGLE)),
         new TaskType("If", "Runs tasks when a condition is true, otherwise runs other tasks",
@@ -93,6 +95,7 @@ public final class MacroTasks {
             case "hotbar" -> new HotbarTask(json.get("slot").getAsInt());
             case "move" -> new MoveTask(json.get("ticks").getAsInt());
             case "jump" -> new JumpTask();
+            case "replay" -> ReplayTask.fromJson(json);
             case "look" -> LookTask.fromJson(json);
             case "module" -> new ToggleModuleTask(
                 GsonHelper.getAsString(json, "module", ""),

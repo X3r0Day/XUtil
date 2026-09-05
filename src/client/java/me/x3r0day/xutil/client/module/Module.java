@@ -1,5 +1,6 @@
 package me.x3r0day.xutil.client.module;
 
+import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.InputConstants;
 import me.x3r0day.xutil.client.XutilClient;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
@@ -14,6 +15,7 @@ public abstract class Module {
     private final Category category;
     private final KeyMapping keybind;
     private boolean enabled;
+    private boolean keyWasDown;
 
     protected Module(String name, String description, Category category) {
         this(name, description, category, InputConstants.UNKNOWN.getValue());
@@ -91,5 +93,19 @@ public abstract class Module {
     }
 
     public void onTick(Minecraft mc) {
+    }
+
+    protected void saveSettings(JsonObject json) {
+    }
+
+    protected void loadSettings(JsonObject json) {
+    }
+
+    boolean isKeyWasDown() {
+        return keyWasDown;
+    }
+
+    void setKeyWasDown(boolean down) {
+        keyWasDown = down;
     }
 }

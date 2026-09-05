@@ -9,7 +9,9 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.util.Mth;
+import com.google.gson.JsonObject;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -46,6 +48,20 @@ public class Zoom extends Module {
         keybind = getKeybind();
         instance = this;
         ClientTickEvents.END_CLIENT_TICK.register(Zoom::tickKey);
+    }
+
+    @Override
+    protected void saveSettings(JsonObject json) {
+        json.addProperty("hold", holdMode);
+        json.addProperty("smooth", smooth);
+        json.addProperty("scroll", scrollZoom);
+    }
+
+    @Override
+    protected void loadSettings(JsonObject json) {
+        holdMode = GsonHelper.getAsBoolean(json, "hold", true);
+        smooth = GsonHelper.getAsBoolean(json, "smooth", true);
+        scrollZoom = GsonHelper.getAsBoolean(json, "scroll", true);
     }
 
     @Override

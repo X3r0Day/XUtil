@@ -6,6 +6,7 @@
   "client": [
     "CameraMixin",
     "GameRendererMixin",
+    "KeyMappingAccessor",
     "LightmapAccessor",
     "LightmapMixin",
     "MinecraftUserAccessor",

@@ -5,10 +5,12 @@ import me.x3r0day.xutil.client.module.Module;
 import me.x3r0day.xutil.client.ui.OptionListScreen;
 import me.x3r0day.xutil.client.ui.OptionListScreen.KeybindRow;
 import me.x3r0day.xutil.client.ui.OptionToggle;
+import com.google.gson.JsonObject;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
@@ -132,5 +134,31 @@ public class WorldInfo extends Module {
     @Override
     protected void onDisable() {
         active = false;
+    }
+
+    @Override
+    protected void saveSettings(JsonObject json) {
+        json.addProperty("biome", showBiome);
+        json.addProperty("coords", showCoords);
+        json.addProperty("dimension", showDimension);
+        json.addProperty("time", showTime);
+        json.addProperty("day", showDay);
+        json.addProperty("facing", showFacing);
+        json.addProperty("light", showLight);
+        json.addProperty("fps", showFps);
+        json.addProperty("entities", showEntities);
+    }
+
+    @Override
+    protected void loadSettings(JsonObject json) {
+        showBiome = GsonHelper.getAsBoolean(json, "biome", true);
+        showCoords = GsonHelper.getAsBoolean(json, "coords", true);
+        showDimension = GsonHelper.getAsBoolean(json, "dimension", false);
+        showTime = GsonHelper.getAsBoolean(json, "time", true);
+        showDay = GsonHelper.getAsBoolean(json, "day", false);
+        showFacing = GsonHelper.getAsBoolean(json, "facing", true);
+        showLight = GsonHelper.getAsBoolean(json, "light", false);
+        showFps = GsonHelper.getAsBoolean(json, "fps", false);
+        showEntities = GsonHelper.getAsBoolean(json, "entities", false);
     }
 }

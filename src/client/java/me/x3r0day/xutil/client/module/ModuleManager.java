@@ -1,7 +1,9 @@
 package me.x3r0day.xutil.client.module;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import me.x3r0day.xutil.client.module.impl.misc.MacroSettings;
+import me.x3r0day.xutil.client.module.impl.misc.Repeater;
 import me.x3r0day.xutil.client.module.impl.movement.Sprint;
 import me.x3r0day.xutil.client.module.impl.render.BreakIndicator;
 import me.x3r0day.xutil.client.module.impl.render.FullBright;
@@ -9,6 +11,7 @@ import me.x3r0day.xutil.client.module.impl.render.TargetHighlight;
 import me.x3r0day.xutil.client.module.impl.render.Zoom;
 import me.x3r0day.xutil.client.module.impl.world.AutoTool;
 import me.x3r0day.xutil.client.module.impl.world.WorldInfo;
+import me.x3r0day.xutil.mixin.client.KeyMappingAccessor;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
@@ -40,6 +43,7 @@ public final class ModuleManager {
         register(new TargetHighlight());
         register(new Zoom());
         register(new Sprint());
+        register(new Repeater());
         register(new MacroSettings());
     }
 
@@ -89,8 +93,13 @@ public final class ModuleManager {
         for (Module module : MODULES) {
             if (module.usesDefaultKeybindToggle()) {
                 KeyMapping keybind = module.getKeybind();
-                while (keybind != null && keybind.consumeClick()) {
-                    module.toggle();
+                if (keybind != null && !keybind.isUnbound()) {
+                    int key = ((KeyMappingAccessor) keybind).xutil$getKey().getValue();
+                    boolean down = InputConstants.isKeyDown(mc.getWindow(), key);
+                    if (down && !module.isKeyWasDown()) {
+                        module.toggle();
+                    }
+                    module.setKeyWasDown(down);
                 }
             }
             if (module.isEnabled()) {

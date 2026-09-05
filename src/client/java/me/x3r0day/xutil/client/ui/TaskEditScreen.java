@@ -11,10 +11,12 @@ import me.x3r0day.xutil.client.macro.task.JumpTask;
 import me.x3r0day.xutil.client.macro.task.LookTask;
 import me.x3r0day.xutil.client.macro.task.LoopTask;
 import me.x3r0day.xutil.client.macro.task.MoveTask;
+import me.x3r0day.xutil.client.macro.task.ReplayTask;
 import me.x3r0day.xutil.client.macro.task.ToggleModuleTask;
 import me.x3r0day.xutil.client.macro.task.UseTask;
 import me.x3r0day.xutil.client.macro.task.WaitTask;
 import me.x3r0day.xutil.client.macro.task.WaitUntilTask;
+import me.x3r0day.xutil.client.repeater.RecordingStore;
 import me.x3r0day.xutil.client.module.Module;
 import me.x3r0day.xutil.client.module.ModuleManager;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -62,6 +64,7 @@ public class TaskEditScreen extends Screen {
             case "use" -> "Use Task";
             case "wait_until" -> "Wait Until Task";
             case "hotbar" -> "Hotbar Task";
+            case "replay" -> "Replay Task";
             default -> "Task";
         };
     }
@@ -77,6 +80,7 @@ public class TaskEditScreen extends Screen {
         if (task instanceof IfTask) return 3;
         if (task instanceof HotbarTask) return 1;
         if (task instanceof AttackTask attack) return 2 + (attack.getMode() == AttackTask.Mode.CROSSHAIR ? 0 : 2);
+        if (task instanceof ReplayTask) return 1;
         return 0;
     }
 
@@ -159,6 +163,9 @@ public class TaskEditScreen extends Screen {
             buttonRow(graphics, panelX, 2, "Edit body (" + loop.getBody().size() + " tasks)", mouseX, mouseY);
         } else if (task instanceof HotbarTask hotbar) {
             stepperRow(graphics, panelX, 0, "Slot", hotbar.getSlot(), mouseX, mouseY);
+        } else if (task instanceof ReplayTask replay) {
+            String value = replay.getRecording().isEmpty() ? "<none>" : replay.getRecording();
+            cycleRow(graphics, panelX, 0, "Recording", value, mouseX, mouseY);
         } else if (task instanceof WaitUntilTask waitUntil) {
             buttonRow(graphics, panelX, 0, "Conditions (" + waitUntil.getStatement().getParts().size() + ")",
                 mouseX, mouseY);
@@ -276,6 +283,12 @@ public class TaskEditScreen extends Screen {
             }
         } else if (task instanceof HotbarTask hotbar) {
             applyStepper(event, panelX, 0, hotbar.getSlot(), 1, 1, 9, hotbar::setSlot);
+        } else if (task instanceof ReplayTask replay) {
+            if (clickCycle(event, panelX, 0)) {
+                cycleRecording(replay);
+                MacroManager.save();
+                return true;
+            }
         } else if (task instanceof WaitUntilTask waitUntil) {
             if (clickButton(event, panelX, 0)) {
                 minecraft.gui.setScreen(new StatementEditScreen(waitUntil.getStatement(), this));
@@ -301,6 +314,16 @@ public class TaskEditScreen extends Screen {
         if (!task.getModuleName().isEmpty()) return task.getModuleName();
         List<Module> modules = ModuleManager.getModules();
         return modules.isEmpty() ? "No modules" : "Choose module";
+    }
+
+    private void cycleRecording(ReplayTask task) {
+        List<String> names = RecordingStore.names();
+        if (names.isEmpty()) {
+            task.setRecording("");
+            return;
+        }
+        int index = names.indexOf(task.getRecording());
+        task.setRecording(names.get((index + 1) % names.size()));
     }
 
     private void cycleModule(ToggleModuleTask task) {

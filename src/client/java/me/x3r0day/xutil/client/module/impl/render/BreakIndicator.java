@@ -14,8 +14,10 @@ import me.x3r0day.xutil.mixin.client.MultiPlayerGameModeAccessor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import com.google.gson.JsonObject;
 import org.joml.Matrix4fc;
 
 import java.util.List;
@@ -46,6 +48,18 @@ public class BreakIndicator extends Module {
 
     public BreakIndicator() {
         super("BreakIndicator", "Fills the block with a growing overlay while you break it.", Category.RENDER);
+    }
+
+    @Override
+    protected void saveSettings(JsonObject json) {
+        json.addProperty("rainbow", rainbow);
+        json.addProperty("color", colorIndex);
+    }
+
+    @Override
+    protected void loadSettings(JsonObject json) {
+        rainbow = GsonHelper.getAsBoolean(json, "rainbow", false);
+        colorIndex = GsonHelper.getAsInt(json, "color", 0);
     }
 
     @Override
