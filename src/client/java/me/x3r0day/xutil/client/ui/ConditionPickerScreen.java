@@ -264,7 +264,7 @@ public class ConditionPickerScreen extends Screen {
         } else if (preview instanceof HealthAboveCondition health) {
             health.setThreshold(Mth.clamp((int) health.getThreshold() + delta, 1, 20));
         } else if (preview instanceof HungerBelowCondition hunger) {
-            hunger.setThreshold(Mth.clamp(hunger.getThreshold() + delta, 1, 19));
+            hunger.setThreshold(Mth.clamp(hunger.getThreshold() + delta, 1, 20));
         }
         return true;
     }

@@ -32,8 +32,6 @@ public final class UseTask extends MacroTask {
         if (!started) {
             started = true;
             heldTicks = 0;
-            // the vanilla input handler releases any use when the key is not
-            // held, so keep the key forced down while the item is in use
             mc.options.keyUse.setDown(true);
             mc.gameMode.useItem(mc.player, InteractionHand.MAIN_HAND);
             LOGGER.info("use: clicked {}", mc.player.getMainHandItem().getItem());
