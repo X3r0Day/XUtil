@@ -82,7 +82,7 @@ cd XUtil
 The jar lands in `build/libs/`. Requires Java 25.
 
 > [!WARNING]
-> XUtil is a client-side mod. It works in singleplayer and on servers that allow client mods.
+> XUtil is a client-side mod. It works in singleplayer and on servers but few servers may trigger Automation AC so use at your own risk!
 
 ---
 
