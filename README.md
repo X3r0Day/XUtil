@@ -1,6 +1,7 @@
 <p align="center">
 <h1 align="center">XUtil</h1>
 <p align="center">A Minecraft Fabric utility mod for quality of life.</p>
+<p align="center">Current version: 1.2.0</p>
 </p>
 
 ## Usage
